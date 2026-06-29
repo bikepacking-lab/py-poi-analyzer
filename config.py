@@ -46,7 +46,7 @@ CACHE_REDIS_OPTIONS = {
 DEFAULT_RADII = {
     "water": 800.0,
     "refueling": 800.0,
-    "bivouac": 1000.0,
+    "bivouac": 1500.0,
     "accommodation": 1000.0,
     "bike-repair": 5000.0,
     "pharmacy": 800.0
@@ -61,7 +61,7 @@ DEFAULT_INTERVALS = {
     "pharmacy": 40.0
 }
 
-DEFAULT_REPORT_FORMATS = ["json", "csv", "xlsx", "docx", "pdf"]
+DEFAULT_REPORT_FORMATS = ["json", "csv", "xlsx", "docx", "pdf", "pdf-map"]
 AVAILABLE_REPORT_FORMATS = [
     {"type": "json", "label": "Format JSON Summary Data"},
     {"type": "csv", "label": "Report Format CSV"},

@@ -74,11 +74,56 @@ def main():
                 print(f"  - {fmt}: {Path(path).name}")
         
         if results.get('summary'):
-            print("─"*60 + "\n")
-            print("\nRésumé:")
-            for key, value in results['summary'].items():
-                print(f"  - {key}: {value}")
-        
+            print(f"""
+📁 Fichier
+───────────────────────────────────────────────────────
+Nom        : {results['summary']['file_info']['name']}
+Taille     : {results['summary']['file_info']['size_mb']} Mo
+Extension  : {results['summary']['file_info']['extension']}
+
+🚴 Trace
+───────────────────────────────────────────────────────
+Distance   : {results['summary']['track_info']['total_distance_km']:.2f} km
+Points     : {results['summary']['track_info']['total_points']}
+Altitude   : {'Oui' if results['summary']['track_info']['has_elevation'] else 'Non'}
+Horodatage : {'Oui' if results['summary']['track_info']['has_time'] else 'Non'}
+
+✂️  Découpage
+───────────────────────────────────────────────────────
+Activé     : {results['summary']['split_info']['enabled']}
+Max segment: {results['summary']['split_info']['max_distance_km']} km
+
+🔍 Recherche POI
+───────────────────────────────────────────────────────
+BBoxes           : {results['summary']['poi_search']['bboxes_count']}
+Durée recherche  : {results['summary']['poi_search']['duration_seconds']:.2f} s
+Calcul distances : {results['summary']['poi_search']['distance_calculation_seconds']:.2f} s
+
+POI trouvés
+───────────────────────────────────────────────────────
+Total      : {results['summary']['poi_search']['results']['total_found']}
+Par type   : {results['summary']['poi_search']['results']['by_type']}
+OSM types  : {results['summary']['poi_search']['results']['by_osm_type']}
+Nommés     : {results['summary']['poi_search']['results']['named_count']}
+Sans nom   : {results['summary']['poi_search']['results']['unnamed_count']}
+
+Distances
+───────────────────────────────────────────────────────
+Min        : {results['summary']['poi_search']['distances']['min_km']:.3f} km
+Moyenne    : {results['summary']['poi_search']['distances']['avg_km']:.3f} km
+Max        : {results['summary']['poi_search']['distances']['max_km']:.3f} km
+
+⚡ Performances
+───────────────────────────────────────────────────────
+Total      : {results['summary']['performance']['total_duration_seconds']:.2f} s
+Recherche  : {results['summary']['performance']['search_duration_seconds']:.2f} s
+Rapport    : {results['summary']['performance']['report_generation_seconds']:.2f} s
+
+ℹ️ Recommandations & Conseils
+───────────────────────────────────────────────────────
+- {"\n- ".join(results['summary']['recommendations'])}
+""")
+                
         print("="*60 + "\n")
         
     except Exception as e:

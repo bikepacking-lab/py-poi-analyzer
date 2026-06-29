@@ -64,10 +64,11 @@ class SplitManager:
             return {
                 'enabled': True,
                 'max_distance_km': CHUNK_DISTANCE_KM,
+                'max_gpx_distance_km': MAX_GPX_DISTANCE_KM,
                 'segments_count': segments_count,
                 'segments': segment_info or []
             }
         return {
             'enabled': False,
-            'reason': 'Auto-split desactive'
+            'reason': 'Auto-split desable'
         }
