@@ -46,7 +46,7 @@ CACHE_REDIS_OPTIONS = {
 DEFAULT_RADII = {
     "water": 800.0,
     "refueling": 800.0,
-    "bivouac": 1500.0,
+    "bivouac": 2000.0,
     "accommodation": 1000.0,
     "bike-repair": 5000.0,
     "pharmacy": 800.0

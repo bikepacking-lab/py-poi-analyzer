@@ -15,10 +15,10 @@ __pycache__/
 .env*
 *.local
 
-gpx/
-report/
-logs/
-credentials/
+/gpx/
+/report/
+/logs/
+/credentials/
 
 temp/
 tmp/
