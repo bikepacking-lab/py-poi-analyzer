@@ -61,12 +61,13 @@ DEFAULT_INTERVALS = {
     "pharmacy": 40.0
 }
 
-DEFAULT_REPORT_FORMATS = ["json", "csv", "xlsx", "docx", "pdf", "pdf-map"]
+DEFAULT_REPORT_FORMATS = ["json", "csv", "xlsx", "docx", "pdf", "pdf-map", "docx-map"]
 AVAILABLE_REPORT_FORMATS = [
     {"type": "json", "label": "Format JSON Summary Data"},
     {"type": "csv", "label": "Report Format CSV"},
     {"type": "xlsx", "label": "Report Format EXCEL"},
     {"type": "docx", "label": "Format WORD"},
+    {"type": "docx-map", "label": "Format WORD MAP+POI"},
     {"type": "gdocs", "label": "Format Google Docs"},
     {"type": "pdf", "label": "Format PDF"},
     {"type": "pdf-map", "label": "Format PDF MAP+POI"},

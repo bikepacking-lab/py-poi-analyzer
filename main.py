@@ -75,25 +75,25 @@ def main():
         
         if results.get('summary'):
             print(f"""
-📁 Fichier
+Fichier
 ───────────────────────────────────────────────────────────
 Nom        : {results['summary']['file_info']['name']}
 Taille     : {results['summary']['file_info']['size_mb']} Mo
 Extension  : {results['summary']['file_info']['extension']}
 
-🚴 Trace
+Trace
 ───────────────────────────────────────────────────────────
 Distance   : {results['summary']['track_info']['total_distance_km']:.2f} km
 Points     : {results['summary']['track_info']['total_points']}
 Altitude   : {'Oui' if results['summary']['track_info']['has_elevation'] else 'Non'}
 Horodatage : {'Oui' if results['summary']['track_info']['has_time'] else 'Non'}
 
-✂️  Découpage
+Découpage
 ───────────────────────────────────────────────────────────
 Activé     : {results['summary']['split_info']['enabled']}
 Max segment: {results['summary']['split_info']['max_distance_km']} km
 
-🔍 Recherche POI
+Recherche POI
 ───────────────────────────────────────────────────────────
 BBoxes           : {results['summary']['poi_search']['bboxes_count']}
 Durée recherche  : {results['summary']['poi_search']['duration_seconds']:.2f} s
@@ -113,13 +113,13 @@ Min        : {results['summary']['poi_search']['distances']['min_km']:.3f} km
 Moyenne    : {results['summary']['poi_search']['distances']['avg_km']:.3f} km
 Max        : {results['summary']['poi_search']['distances']['max_km']:.3f} km
 
-⚡ Performances
+Performances
 ───────────────────────────────────────────────────────────
 Total      : {results['summary']['performance']['total_duration_seconds']:.2f} s
 Recherche  : {results['summary']['performance']['search_duration_seconds']:.2f} s
 Rapport    : {results['summary']['performance']['report_generation_seconds']:.2f} s
 
-ℹ️ Recommandations & Conseils
+Recommandations & Conseils
 ───────────────────────────────────────────────────────────
 - {"\n- ".join(results['summary']['recommendations'])}
 """)
