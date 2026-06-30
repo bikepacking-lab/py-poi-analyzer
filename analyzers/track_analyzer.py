@@ -78,20 +78,37 @@ class TrackAnalyzer:
         search_start = time.time()
         
         # 5. Detection POI - Utilisation des valeurs par defaut si non fournies
-        poi_types = poi_types if poi_types else DEFAULT_POI_TYPES
-        radii = radii if radii else DEFAULT_RADII
-        intervals = intervals if intervals else DEFAULT_INTERVALS
+        poi_types = poi_types or DEFAULT_POI_TYPES
+        radii = radii or DEFAULT_RADII
+        intervals = intervals or DEFAULT_INTERVALS
         
-        water_interval = intervals.get('water', 20.0)
-        bboxes = gpx_processor.get_poi_search_segments(water_interval)
-        
+        all_bboxes = []
+        bboxes_by_type = {}
+
         search_start = time.time()
-        pois = self.poi_detector.detect_pois(
-            bboxes, poi_types, DEFAULT_POI_TAGS_OSM, radii,
-            max_workers=ANALYSIS_MAX_PARALLEL
-        ) if bboxes else []
-        search_duration = time.time() - search_start
         
+        for poi_type in poi_types:
+            interval = intervals.get(poi_type, 20.0)
+            logger.info(f"Bboxes pour '{poi_type}': intervalle {interval} km")
+    
+            bboxes = gpx_processor.get_poi_search_segments(interval)
+            bboxes_by_type[poi_type] = bboxes
+            all_bboxes.extend(bboxes)
+        
+        unique_bboxes = list(set(all_bboxes))
+        logger.info(f"Total: {len(unique_bboxes)} bboxes uniques")
+           
+        search_duration = time.time() - search_start
+        if unique_bboxes:
+            pois = self.poi_detector.detect_pois(
+                unique_bboxes, poi_types, DEFAULT_POI_TAGS_OSM, radii,
+                max_workers=ANALYSIS_MAX_PARALLEL,
+                max_tags_per_type=10
+            )
+        else:
+            pois = []
+            logger.warning("Aucune bbox generee")
+    
         logger.info(f"{len(pois)} POI detectes en {search_duration:.2f}s")
         
         search_duration = time.time() - search_start
@@ -118,6 +135,14 @@ class TrackAnalyzer:
             bboxes, poi_stats, search_duration, dist_duration,
             poi_types, radii, intervals
         )
+        stats['poi_search']['configuration'] = {
+            'types': poi_types,
+            'radii': radii,
+            'intervals': intervals,
+            'poi_api_url': 'https://overpass-api.de/api/interpreter'
+        }
+        stats['poi_search']['bboxes_count'] = len(unique_bboxes)
+        stats['poi_search']['bboxes_by_type'] = {t: len(b) for t, b in bboxes_by_type.items()}
         
         report_start = time.time()
         

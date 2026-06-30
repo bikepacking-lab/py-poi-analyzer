@@ -17,9 +17,9 @@ for d in ALL_DIRS:
     d.mkdir(parents=True, exist_ok=True)
 
 # Configuration des limites
-MAX_GPX_SIZE_MB = 2
+MAX_GPX_SIZE_MB = 5
 MAX_GPX_DISTANCE_KM = 250.0
-CHUNK_DISTANCE_KM = 15.0
+# CHUNK_DISTANCE_KM = 15.0
 GPX_AUTO_SPLIT = True
 
 # Configuration de l'analyse
@@ -46,7 +46,7 @@ CACHE_REDIS_OPTIONS = {
 DEFAULT_RADII = {
     "water": 800.0,
     "refueling": 800.0,
-    "bivouac": 2000.0,
+    "bivouac": 1000.0,
     "accommodation": 1000.0,
     "bike-repair": 5000.0,
     "pharmacy": 800.0
@@ -125,6 +125,19 @@ DEFAULT_POI_TAGS_OSM = {
         '["backcountry"="yes"]',
         '["boundary"="protected_area"]["protect_class"="6"]["camping"="yes"]',
         '["boundary"="national_park"]["camping"="yes"]'
+        # '["tourism"="camp_site"]',
+        # '["tourism"="wilderness_hut"]',
+        # '["amenity"="shelter"]',
+        # '["tourism"="camp_site"]["camp_site"~"basic|backcountry"]',
+        # '["building"="hut"]["access"!="private"]',
+        # '["amenity"="shelter"]["shelter_type"~"lean_to|basic_hut|weather_shelter"]',
+        # '["leisure"="firepit"]',
+        # '["tourism"="picnic_site"]["access"!="private"]',
+        # '["leisure"="picnic_table"]["access"!="private"]',
+        # '["camping"="yes"]["access"!="private"]',
+        # '["backcountry"="yes"]',
+        # '["boundary"="protected_area"]["protect_class"="6"]["camping"="yes"]',
+        # '["boundary"="national_park"]["camping"="yes"]'
     ]
 }
 

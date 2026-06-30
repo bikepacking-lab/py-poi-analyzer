@@ -71,12 +71,6 @@ gps_analyzer/
 ```text
 # Installation des dépendances principales
 pip install -r requirements.txt
-
-# Pour le support FIT (optionnel)
-pip install fitdecode
-
-# Pour Google Docs (optionnel)
-pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
 
 ## Utilisation
@@ -198,8 +192,6 @@ AVAILABLE_POI_TAGS_OSM["new-poi"] = [
 ]
 ```
 
-
-
 ## Report Google Docs
 
 **Ajouter le fichier credentials.json**
@@ -220,17 +212,13 @@ AVAILABLE_POI_TAGS_OSM["new-poi"] = [
 
 ## Support
 
-Pour toute question ou problème :
-
-Ouvrir une issue sur GitHub
-
-Contacter l'équipe de développement
-
-Consulter la documentation complète
+* Pour toute question ou problème : support@bikepacking-analyzer.com
+* Ouvrir une issue sur GitHub : [github.com/bikepacking-lab/py-poi-analyzer](https://github.com/bikepacking-lab/py-poi-analyzer)
+* Contacter l'équipe de développement : lab@bikepacking-analyzer.com
 
 ## Licence
 
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
+> Ce projet est sous licence **Apache License 2.0** Voir le fichier **LICENSE** pour plus de détails.
 
 ## Contribution
 

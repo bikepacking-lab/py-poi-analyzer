@@ -77,7 +77,6 @@ class RateLimiter:
                 time.sleep(wait_time)
             self.last_request_time = time.time()
 
-
 class POIDetector:
     """Detecteur de Points d'Interet - Version optimisee"""
     
@@ -100,21 +99,42 @@ class POIDetector:
     def _build_overpass_query(self, bbox: Tuple[float, float, float, float], 
                              poi_types: List[str], 
                              tags_config: Dict,
-                             max_tags_per_type: int = 2) -> str:
-        """Construit une requete Overpass legere"""
+                             max_tags_per_type: int = 10) -> str:
+        """Construit une requete Overpass"""
         lat_min, lon_min, lat_max, lon_max = bbox
         bbox_str = f"{lat_min:.6f},{lon_min:.6f},{lat_max:.6f},{lon_max:.6f}"
         
         queries = []
+
+        logger.info(f"=== CONSTRUCTION REQUETE OVERPASS ===")
+        logger.info(f"Bbox: {bbox_str}")
+        logger.info(f"Types: {poi_types}")
+        logger.info(f"max_tags_per_type: {max_tags_per_type}")
+    
         for poi_type in poi_types:
             if poi_type not in tags_config:
                 continue
-            # Limiter a 2 tags par type pour des requetes plus rapides
-            tags_list = tags_config[poi_type][:max_tags_per_type]
+            
+            tags_list = tags_config[poi_type]
+        
+            # Si max_tags_per_type est defini, on limite
+            if max_tags_per_type and max_tags_per_type > 0:
+                tags_list = tags_list[:max_tags_per_type]
+                
+            logger.info(f"Type '{poi_type}' - {len(tags_list)} tags disponibles")
+            
+            selected_tags = tags_list[:max_tags_per_type]
+            logger.info(f"  Tags utilises ({len(selected_tags)}):")
+            logger.info(f"  Tags utilises ({len(selected_tags)}):")
+            for i, tag in enumerate(selected_tags):
+                logger.info(f"    {i+1}. {tag}")
+            
             for tag_filter in tags_list:
                 tag_clean = tag_filter.strip()
                 queries.append(f'node{tag_clean}({bbox_str});')
-        
+                queries.append(f'way{tag_clean}({bbox_str});')
+                queries.append(f'relation{tag_clean}({bbox_str});')
+                
         if not queries:
             return ''
         
@@ -122,10 +142,17 @@ class POIDetector:
         query = '[out:json][timeout:25];\n(\n'
         query += '\n'.join(queries)
         query += '\n);\nout body qt;'
+        
+        logger.info(f"Requete construite ({len(queries)} sous-requetes)")
+        logger.debug(f"Requete complete: {query[:500]}...")
+
         return query
     
     def _query_overpass(self, query: str) -> Optional[List[Dict]]:
         """Execute une requete Overpass avec retry et backoff"""
+        
+        #! Force le vidate du cache
+        # self.query_cache.clear()
         
         # Cache memoire
         query_hash = hashlib.md5(query.encode()).hexdigest()
@@ -198,7 +225,7 @@ class POIDetector:
                     if attempt < self.max_retries - 1:
                         time.sleep(self.retry_delays[attempt])
                     continue
-                    
+                
             except requests.Timeout:
                 logger.warning(f"Timeout ({attempt+1}/{self.max_retries})")
                 if attempt < self.max_retries - 1:
@@ -226,10 +253,21 @@ class POIDetector:
     def _process_result(self, elements: List[Dict], poi_type: str) -> List[POI]:
         """Traite les resultats Overpass avec filtrage des POI vides"""
         pois = []
+        
+        logger.info(f"Traitement des resultats pour '{poi_type}' - {len(elements)} elements")
+        
         for element in elements:
             try:
                 tags = element.get('tags', {})
+                
+                # DEBUG: Afficher les tags des elements rejetes
+                if poi_type == 'bivouac':
+                    logger.debug(f"Element tags: {tags}")
+                
                 if not self._match_type(tags, poi_type):
+                    if poi_type == 'bivouac':
+                        logger.debug(f"  Rejete - ne correspond pas au type")
+                    
                     continue
             
                 lat = element.get('lat', 0.0)
@@ -272,6 +310,8 @@ class POIDetector:
                 pois.append(poi)
             except Exception:
                 continue
+            
+        logger.info(f"Resultat pour '{poi_type}': {len(pois)} POI")
         return pois
     
     def _build_address(self, tags: Dict) -> Optional[str]:
@@ -307,14 +347,52 @@ class POIDetector:
     
     def _match_type(self, tags: Dict, poi_type: str) -> bool:
         """Verifie si les tags correspondent au type"""
-        
+    
         if poi_type not in AVAILABLE_POI_TAGS_OSM:
             return True
-        
-        for filter_str in AVAILABLE_POI_TAGS_OSM[poi_type]:
-            if self._match_filter(tags, filter_str):
+    
+        filters = AVAILABLE_POI_TAGS_OSM[poi_type]
+    
+        for filter_str in filters:
+            if self._match_filter_permissive(tags, filter_str):
                 return True
+    
         return False
+
+    def _match_filter_permissive(self, tags: Dict, filter_str: str) -> bool:
+        """Verifie si les tags correspondent a un filtre"""
+        try:
+            pattern = r'\["([^"]+)"\s*([=!~]=?|~)\s*"([^"]*)"\]'
+            conditions = re.findall(pattern, filter_str)
+        
+            if not conditions: return False
+        
+            matched = 0
+            total = len(conditions)
+        
+            for key, operator, value in conditions:
+                if key not in tags:
+                    continue
+            
+                tag_value = str(tags[key])
+            
+                if operator == '=':
+                    if tag_value == value:
+                        matched += 1
+                elif operator == '!=':
+                    if tag_value != value:
+                        matched += 1
+                elif operator == '~':
+                    if re.search(value, tag_value):
+                        matched += 1
+                elif operator == '!~':
+                    if not re.search(value, tag_value):
+                        matched += 1
+        
+            if total == 1: return matched >= 1
+            else: return matched >= total / 2
+        except Exception:
+            return False
     
     def _match_filter(self, tags: Dict, filter_str: str) -> bool:
         """Verifie si les tags correspondent a un filtre"""
@@ -347,13 +425,13 @@ class POIDetector:
                           poi_types: List[str], 
                           tags_config: Dict,
                           radius: float,
-                          max_tags_per_type: int = 2) -> List[POI]:
+                          max_tags_per_type: int = 10) -> List[POI]:
         """Extrait les POI d'une bbox avec cache"""
         if not bbox or not poi_types:
             return []
         
         # Cache Redis
-        cache_key = f"poi:{bbox}:{','.join(sorted(poi_types))}"
+        cache_key = f"poi:{bbox}:{','.join(sorted(poi_types))}:{max_tags_per_type}"
         cached = self.cache.get(cache_key) if self.cache else None
         if cached:
             logger.debug(f"Cache Redis hit")
@@ -380,7 +458,7 @@ class POIDetector:
                 dist = self._haversine_distance(poi.lat, poi.lon, center_lat, center_lon)
                 if dist <= radius / 1000.0:
                     filtered.append(poi)
-            all_pois = filtered
+                    all_pois = filtered
         
         # Cache Redis
         if self.cache and all_pois:
@@ -397,7 +475,7 @@ class POIDetector:
                    tags_config: Dict,
                    radii: Dict[str, float],
                    max_workers: int = 1,
-                   max_tags_per_type: int = 2) -> List[POI]:
+                   max_tags_per_type: int = 10) -> List[POI]:
         """
         Detecte les POI - MODE SERIE OBLIGATOIRE
         

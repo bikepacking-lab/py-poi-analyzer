@@ -7,6 +7,7 @@ def register_all_generators():
     from .report.csv_generator import CSVGenerator
     from .report.excel_generator import ExcelGenerator
     from .report.word_generator import WordGenerator
+    from .report.word_map_generator import WordMapGenerator
     from .report.pdf_generator import PDFGenerator
     from .report.pdf_map_generator import PDFMapGenerator
     from .report.gdocs_generator import GDocsGenerator
@@ -20,6 +21,7 @@ def register_all_generators():
     GeneratorRegistry.register('csv', CSVGenerator)
     GeneratorRegistry.register('xlsx', ExcelGenerator)
     GeneratorRegistry.register('docx', WordGenerator)
+    GeneratorRegistry.register('docx-map', WordMapGenerator)
     GeneratorRegistry.register('pdf', PDFGenerator)
     GeneratorRegistry.register('pdf-map', PDFMapGenerator)
     GeneratorRegistry.register('gdocs', GDocsGenerator)
@@ -30,9 +32,3 @@ def register_all_generators():
     GeneratorRegistry.register('fit-data', FITGenerator)
 
 register_all_generators()
-
-__all__ = [
-    'BaseGenerator',
-    'GeneratorRegistry',
-    'register_all_generators'
-]
