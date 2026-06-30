@@ -6,7 +6,6 @@ Permet de generer les credentials necessaires pour l'utilisation du generateur G
 """
 
 import json
-import os
 import sys
 from pathlib import Path
 

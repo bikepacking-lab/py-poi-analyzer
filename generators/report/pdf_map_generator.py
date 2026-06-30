@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List, Tuple, cast
 import logging
-import math
 from reportlab.lib.pagesizes import landscape, A4
-from reportlab.lib.units import cm, mm
+from reportlab.lib.units import cm
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from reportlab.graphics.shapes import Drawing, Line, Circle, String, Rect, Polygon
-from reportlab.graphics import renderPDF
-from reportlab.pdfgen import canvas
-import io
+from reportlab.lib.enums import TA_CENTER
+from reportlab.graphics.shapes import Drawing, Line, Circle, String, Rect
+from reportlab.lib import colors
 from ..base_generator import BaseGenerator
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +105,7 @@ class PDFMapGenerator(BaseGenerator):
             logger.error(traceback.format_exc())
             return None
     
-    def _calculate_bounds(self, track_points: List[Dict], pois: List) -> Tuple[float, float, float, float]:
+    def _calculate_bounds(self, track_points: List[Dict], pois: List) -> Optional[Tuple[float, float, float, float]]:
         """Calcule les limites de la carte"""
         lats = []
         lons = []
@@ -158,11 +157,12 @@ class PDFMapGenerator(BaseGenerator):
         # Fond
         bg = Rect(
             margin, margin,
-            map_width - 2*margin, map_height - 2*margin,
-            fillColor=colors.HexColor('#F8F9FA'),
-            strokeColor=colors.HexColor('#2C3E50'),
-            strokeWidth=1.5
+            map_width - 2*margin, 
+            map_height - 2*margin
         )
+        bg.fillColor=colors.HexColor('#F8F9FA')
+        bg.strokeColor=colors.HexColor('#2C3E50')
+        bg.strokeWidth=1.5
         drawing.add(bg)
         
         def to_pixel(lat, lon):

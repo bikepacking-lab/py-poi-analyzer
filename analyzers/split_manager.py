@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 import logging
 import math
 
@@ -155,7 +155,7 @@ class SplitManager:
         return segments
     
     @staticmethod
-    def get_split_info(enabled: bool, segments_count: int = 0, segment_info: List[Dict] = None) -> Dict:
+    def get_split_info(enabled: bool, segments_count: int = 0, segment_info: Optional[List[Dict]] = None) -> Dict:
         """Retourne les informations de split"""
         if enabled:
             return {
@@ -163,7 +163,7 @@ class SplitManager:
                 'threshold_km': MAX_GPX_DISTANCE_KM,
                 'max_distance_km': round(MAX_GPX_DISTANCE_KM, 1),
                 'segments_count': segments_count,
-                'segments': segment_info or [],
+                'segments': segment_info if segment_info is not None else [],
                 'reason': 'NA'
             }
         return {

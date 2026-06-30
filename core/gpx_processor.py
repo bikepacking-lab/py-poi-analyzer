@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import gpxpy
 import gpxpy.gpx
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Tuple, Dict, Any
 from pathlib import Path
 import logging
 import math
