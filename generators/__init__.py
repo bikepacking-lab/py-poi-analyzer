@@ -11,12 +11,13 @@ def register_all_generators():
     from .report.pdf_generator import PDFGenerator
     from .report.pdf_map_generator import PDFMapGenerator
     from .report.gdocs_generator import GDocsGenerator
-    
+    from .report.gdocs_map_generator import GDocsMapGenerator  # NOUVEAU
+
     from .enriched.gpx_generator import GPXGenerator
     from .enriched.kml_generator import KMLGenerator
     from .enriched.tcx_generator import TCXGenerator
     from .enriched.fit_generator import FITGenerator
-    
+
     GeneratorRegistry.register('json', JSONGenerator)
     GeneratorRegistry.register('csv', CSVGenerator)
     GeneratorRegistry.register('xlsx', ExcelGenerator)
@@ -25,7 +26,8 @@ def register_all_generators():
     GeneratorRegistry.register('pdf', PDFGenerator)
     GeneratorRegistry.register('pdf-map', PDFMapGenerator)
     GeneratorRegistry.register('gdocs', GDocsGenerator)
-    
+    GeneratorRegistry.register('gdocs-map', GDocsMapGenerator)  # NOUVEAU
+
     GeneratorRegistry.register('gpx-enriched', GPXGenerator)
     GeneratorRegistry.register('kml-enriched', KMLGenerator)
     GeneratorRegistry.register('tcx-enriched', TCXGenerator)

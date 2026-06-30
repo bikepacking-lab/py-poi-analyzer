@@ -20,3 +20,6 @@ python main.py track.gpx \
     --radii '{"water":1000,"refueling":1500}' \
     --intervals '{"water":30,"refueling":40}' \
     --debug
+
+
+redis-server --service-install redis.conf

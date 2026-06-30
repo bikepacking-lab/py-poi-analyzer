@@ -4,24 +4,23 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 import logging
 import json
-from config import BASE_DIR
-        
+
 from ..base_generator import BaseGenerator
 
 logger = logging.getLogger(__name__)
 
 class GDocsGenerator(BaseGenerator):
-    """Generateur de rapport Google Docs - TOUS les POI"""
-    
+    """Générateur de rapport Google Docs"""
+
     def __init__(self):
         super().__init__()
         self.service = None
         self.drive_service = None
         self._init_credentials()
-    
+
     def get_format_type(self) -> str:
         return 'gdocs'
-    
+
     def _init_credentials(self):
         """Initialise les credentials Google"""
         try:
@@ -29,16 +28,16 @@ class GDocsGenerator(BaseGenerator):
             from google_auth_oauthlib.flow import InstalledAppFlow
             from google.auth.transport.requests import Request
             from googleapiclient.discovery import build
-            
+
             SCOPES = [
                 'https://www.googleapis.com/auth/documents',
                 'https://www.googleapis.com/auth/drive.file'
             ]
-            
+
             creds = None
             token_path = self._get_token_path()
             credentials_path = self._get_credentials_path()
-            
+
             if token_path.exists():
                 try:
                     with open(token_path, 'r') as f:
@@ -47,7 +46,7 @@ class GDocsGenerator(BaseGenerator):
                         )
                 except Exception as e:
                     logger.warning(f"Erreur chargement token: {e}")
-            
+
             if not creds or not creds.valid:
                 if creds and creds.expired and creds.refresh_token:
                     creds.refresh(Request())
@@ -59,37 +58,39 @@ class GDocsGenerator(BaseGenerator):
                             "Veuillez le placer dans: " + str(credentials_path)
                         )
                         return
-                    
+
                     flow = InstalledAppFlow.from_client_secrets_file(
                         str(credentials_path), SCOPES
                     )
                     creds = flow.run_local_server(port=0)
                     logger.info("Authentification Google reussie")
-                
+
                 with open(token_path, 'w') as f:
                     json.dump(json.loads(creds.to_json()), f)
                 logger.info(f"Token Google sauvegarde: {token_path}")
-            
+
             self.service = build('docs', 'v1', credentials=creds)
             self.drive_service = build('drive', 'v3', credentials=creds)
             logger.info("Services Google initialises")
-            
+
         except ImportError as e:
             logger.error(f"Bibliotheques Google manquantes: {e}")
             logger.error("Installez: pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib")
         except Exception as e:
             logger.error(f"Erreur initialisation Google: {e}")
-    
+
     def _get_credentials_path(self) -> Path:
+        from config import BASE_DIR
         creds_dir = BASE_DIR / 'credentials'
         creds_dir.mkdir(exist_ok=True)
         return creds_dir / 'credentials.json'
-    
+
     def _get_token_path(self) -> Path:
+        from config import BASE_DIR
         creds_dir = BASE_DIR / 'credentials'
         creds_dir.mkdir(exist_ok=True)
         return creds_dir / 'token_gdocs.json'
-    
+
     def _safe_str(self, obj: Any, key: str, default: str = '') -> str:
         if obj is None:
             return default
@@ -100,7 +101,7 @@ class GDocsGenerator(BaseGenerator):
             val = getattr(obj, key, default)
             return str(val) if val is not None else default
         return default
-    
+
     def _safe_float(self, obj: Any, key: str, default: float = 0.0) -> float:
         if obj is None:
             return default
@@ -116,73 +117,74 @@ class GDocsGenerator(BaseGenerator):
             return float(val)
         except (ValueError, TypeError):
             return default
-    
+
     def generate(self, data: Dict[str, Any], output_dir: Path, **kwargs) -> Optional[Path]:
-        """Genere un document Google Docs avec TOUS les POI"""
-        
+        """Génère un document Google Docs"""
+
         if not self.service:
             logger.error("Service Google non initialise")
             return None
-        
+
         try:
-            # 1. Creer le document
-            doc_title = f"Analyse GPS - {data.get('analysis_id', 'unknown')}"
-            
+            # 1. Créer le document
+            doc_title = f"Rapport d'Analyse GPS - {data.get('analysis_id', 'unknown')[:8]}"
+
             doc = self.service.documents().create(body={'title': doc_title}).execute()
             doc_id = doc.get('documentId')
             doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
-            
+
             logger.info(f"Document Google cree: {doc_title}")
             logger.info(f"URL: {doc_url}")
-            
-            # 2. Construire le contenu
+
+            # 2. Construire le contenu avec style
             requests = self._build_content(data)
-            
-            # 3. Mettre a jour le document
+
+            # 3. Mettre à jour le document
             if requests:
-                # Diviser en lots de 100 pour eviter les erreurs
                 for i in range(0, len(requests), 100):
                     batch = requests[i:i+100]
                     self.service.documents().batchUpdate(
                         documentId=doc_id,
                         body={'requests': batch}
                     ).execute()
-            
+
             # 4. Sauvegarder l'URL
-            url_file = output_dir / f'analysis_report_{data.get("analysis_id", "unknown")}_gdocs_url_.txt'
+            url_file = output_dir / f'analysis_report_{data.get("analysis_id", "unknown")}_gdocs_url.txt'
             with open(url_file, 'w', encoding='utf-8') as f:
                 f.write(doc_url)
                 f.write('\n\n')
                 f.write(f"Total POI: {len(data.get('pois', []))}")
-            
+
             logger.info(f"URL Google Docs sauvegardee: {url_file}")
-            
+
             return url_file
-            
+
         except Exception as e:
             logger.error(f"Erreur generation Google Docs: {e}")
             return None
-    
+
     def _build_content(self, data: Dict[str, Any]) -> List[Dict]:
-        """Construit le contenu du document - TOUS les POI"""
+        """Construit le contenu du document"""
         requests = []
+        current_index = 1
+
         summary = data.get('summary', {})
         track_info = summary.get('track_info', {})
         poi_search = summary.get('poi_search', {})
         poi_results = poi_search.get('results', {})
+        performance = summary.get('performance', {})
         pois = data.get('pois', [])
-        
-        current_index = 1
-        
-        # === TITRE ===
+        config = poi_search.get('configuration', {})
+
+        # === TITRE PRINCIPAL ===
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': "RAPPORT D'ANALYSE GPS\n\n"
+                'text': "RAPPORT D'ANALYSE GPS\n"
             }
         })
-        current_index += len("RAPPORT D'ANALYSE GPS\n\n")
-        
+        current_index += len("RAPPORT D'ANALYSE GPS\n")
+
         requests.append({
             'updateParagraphStyle': {
                 'range': {
@@ -191,226 +193,252 @@ class GDocsGenerator(BaseGenerator):
                 },
                 'paragraphStyle': {
                     'namedStyleType': 'TITLE',
-                    'alignment': 'CENTER'
+                    'alignment': 'CENTER',
+                    'spacingMode': 'NEVER_COLLAPSE',
+                    'spaceAbove': {'magnitude': 12, 'unit': 'PT'},
+                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
                 },
-                'fields': 'namedStyleType,alignment'
+                'fields': 'namedStyleType,alignment,spacingMode,spaceAbove,spaceBelow'
             }
         })
-        
-        # === INFORMATIONS GENERALES ===
+
+        # === SOUS-TITRE ===
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': "INFORMATIONS GENERALES\n"
+                'text': f"ID: {data.get('analysis_id', 'N/A')} | {data.get('timestamp', '').split('T')[0]}\n\n"
             }
         })
-        current_index += len("INFORMATIONS GENERALES\n")
-        
+        current_index += len(f"ID: {data.get('analysis_id', 'N/A')} | {data.get('timestamp', '').split('T')[0]}\n\n")
+
         requests.append({
             'updateParagraphStyle': {
                 'range': {
-                    'startIndex': current_index - len("INFORMATIONS GENERALES\n"),
+                    'startIndex': current_index - len(f"ID: {data.get('analysis_id', 'N/A')} | {data.get('timestamp', '').split('T')[0]}\n\n"),
                     'endIndex': current_index
                 },
-                'paragraphStyle': {'namedStyleType': 'HEADING_1'},
-                'fields': 'namedStyleType'
+                'paragraphStyle': {
+                    'namedStyleType': 'SUBTITLE',
+                    'alignment': 'CENTER',
+                    'spaceBelow': {'magnitude': 12, 'unit': 'PT'}
+                },
+                'fields': 'namedStyleType,alignment,spaceBelow'
             }
         })
-        
-        info_text = (
-            f"ID Analyse: {data.get('analysis_id', 'N/A')}\n"
-            f"Fichier: {data.get('input_file', 'N/A')}\n"
-            f"Date: {data.get('timestamp', 'N/A')}\n"
-            f"Distance totale: {track_info.get('total_distance_km', 0)} km\n"
-            f"Nombre de points: {track_info.get('total_points', 0)}\n\n"
-        )
+
+        # === SECTION 1: RESUME ===
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': info_text
+                'text': "1. RESUME DE L'ANALYSE\n"
             }
         })
-        current_index += len(info_text)
-        
-        # === RESUME ===
-        requests.append({
-            'insertText': {
-                'location': {'index': current_index},
-                'text': "RESUME\n"
-            }
-        })
-        current_index += len("RESUME\n")
-        
+        current_index += len("1. RESUME DE L'ANALYSE\n")
+
         requests.append({
             'updateParagraphStyle': {
                 'range': {
-                    'startIndex': current_index - len("RESUME\n"),
+                    'startIndex': current_index - len("1. RESUME DE L'ANALYSE\n"),
                     'endIndex': current_index
                 },
-                'paragraphStyle': {'namedStyleType': 'HEADING_1'},
-                'fields': 'namedStyleType'
+                'paragraphStyle': {
+                    'namedStyleType': 'HEADING_1',
+                    'spaceAbove': {'magnitude': 18, 'unit': 'PT'},
+                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
+                },
+                'fields': 'namedStyleType,spaceAbove,spaceBelow'
             }
         })
-        
-        performance = summary.get('performance', {})
-    
-        # Dans la section RESUME
-        resume_text = (
-            f"Total POI: {poi_results.get('total_found', 0)}\n"
-            f"POI nommes: {poi_results.get('named_count', 0)}\n"
-            f"POI non nommes: {poi_results.get('unnamed_count', 0)}\n\n"
-            f"--- PERFORMANCE ---\n"
-            f"Temps total: {performance.get('total_duration_seconds', 0):.1f} s\n"
-            f"Temps recherche POI: {performance.get('search_duration_seconds', 0):.1f} s\n"
-            f"Temps calcul distances: {performance.get('distance_calculation_seconds', 0):.1f} s\n\n"
-        )
+
+        # Tableau de résumé
+        summary_rows = [
+            ['Métrique', 'Valeur'],
+            ['Fichier source', data.get('input_file', 'N/A')],
+            ['Distance totale', f"{track_info.get('total_distance_km', 0):.1f} km"],
+            ['Points', str(track_info.get('total_points', 0))],
+            ['POI trouvés', str(poi_results.get('total_found', 0))],
+            ['POI nommés', str(poi_results.get('named_count', 0))],
+            ['POI non nommés', str(poi_results.get('unnamed_count', 0))],
+            ['Temps total', f"{performance.get('total_duration_seconds', 0):.1f} s"]
+        ]
+
+        # Créer le tableau
+        requests.extend(self._create_table(summary_rows, current_index))
+        current_index += self._get_table_length(summary_rows)
+
+        # === SECTION 2: POI PAR TYPE ===
+        requests.append({
+            'insertText': {
+                'location': {'index': current_index},
+                'text': "\n2. POI PAR TYPE\n"
+            }
+        })
+        current_index += len("\n2. POI PAR TYPE\n")
+
+        requests.append({
+            'updateParagraphStyle': {
+                'range': {
+                    'startIndex': current_index - len("\n2. POI PAR TYPE\n"),
+                    'endIndex': current_index
+                },
+                'paragraphStyle': {
+                    'namedStyleType': 'HEADING_1',
+                    'spaceAbove': {'magnitude': 18, 'unit': 'PT'},
+                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
+                },
+                'fields': 'namedStyleType,spaceAbove,spaceBelow'
+            }
+        })
+
+        # Tableau des types
+        by_type = poi_results.get('by_type', {})
+        if by_type:
+            type_rows = [['Type de POI', 'Nombre']]
+            for poi_type, count in by_type.items():
+                type_rows.append([poi_type.capitalize(), str(count)])
+            type_rows.append(['Total', str(poi_results.get('total_found', 0))])
+
+            requests.extend(self._create_table(type_rows, current_index))
+            current_index += self._get_table_length(type_rows)
+
+        # === SECTION 3: CONFIGURATION ===
+        requests.append({
+            'insertText': {
+                'location': {'index': current_index},
+                'text': "\n3. CONFIGURATION DE LA RECHERCHE\n"
+            }
+        })
+        current_index += len("\n3. CONFIGURATION DE LA RECHERCHE\n")
+
+        requests.append({
+            'updateParagraphStyle': {
+                'range': {
+                    'startIndex': current_index - len("\n3. CONFIGURATION DE LA RECHERCHE\n"),
+                    'endIndex': current_index
+                },
+                'paragraphStyle': {
+                    'namedStyleType': 'HEADING_1',
+                    'spaceAbove': {'magnitude': 18, 'unit': 'PT'},
+                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
+                },
+                'fields': 'namedStyleType,spaceAbove,spaceBelow'
+            }
+        })
+
+        # Configuration textuelle
+        config_text = f"Types recherchés: {', '.join(config.get('types', []))}\n"
+        config_text += f"Rayons: {json.dumps(config.get('radii', {}), ensure_ascii=False)}\n"
+        config_text += f"Intervalles: {json.dumps(config.get('intervals', {}), ensure_ascii=False)}\n"
+
+        # Filtres OSM
+        osm_filters = config.get('osm_filters', {})
+        if osm_filters:
+            config_text += "\nFiltres OSM utilisés:\n"
+            for poi_type, filters in osm_filters.items():
+                config_text += f"\n  {poi_type.capitalize()}:\n"
+                for f in filters[:5]:
+                    config_text += f"    - {f}\n"
+                if len(filters) > 5:
+                    config_text += f"    ... et {len(filters) - 5} autres filtres\n"
 
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': resume_text
+                'text': config_text
             }
         })
-        current_index += len(resume_text)
-        
-        # === STATISTIQUES PAR TYPE ===
-        by_type = poi_results.get('by_type', {})
-        if by_type and isinstance(by_type, dict):
-            requests.append({
-                'insertText': {
-                    'location': {'index': current_index},
-                    'text': "REPARTITION PAR TYPE\n"
-                }
-            })
-            current_index += len("REPARTITION PAR TYPE\n")
-            
-            requests.append({
-                'updateParagraphStyle': {
-                    'range': {
-                        'startIndex': current_index - len("REPARTITION PAR TYPE\n"),
-                        'endIndex': current_index
-                    },
-                    'paragraphStyle': {'namedStyleType': 'HEADING_2'},
-                    'fields': 'namedStyleType'
-                }
-            })
-            
-            for poi_type, count in by_type.items():
-                line = f"- {poi_type}: {count}\n"
-                requests.append({
-                    'insertText': {
-                        'location': {'index': current_index},
-                        'text': line
-                    }
-                })
-                current_index += len(line)
-            
-            requests.append({
-                'insertText': {
-                    'location': {'index': current_index},
-                    'text': "\n"
-                }
-            })
-            current_index += 1
-        
-        # === LISTE COMPLETE DES POI - TOUS SANS LIMITE ===
-        requests.append({
-            'insertText': {
-                'location': {'index': current_index},
-                'text': f"LISTE COMPLETE DES POI ({len(pois)})\n"
-            }
-        })
-        current_index += len(f"LISTE COMPLETE DES POI ({len(pois)})\n")
-        
+        current_index += len(config_text)
+
         requests.append({
             'updateParagraphStyle': {
                 'range': {
-                    'startIndex': current_index - len(f"LISTE COMPLETE DES POI ({len(pois)})\n"),
+                    'startIndex': current_index - len(config_text),
                     'endIndex': current_index
                 },
-                'paragraphStyle': {'namedStyleType': 'HEADING_1'},
-                'fields': 'namedStyleType'
+                'paragraphStyle': {
+                    'namedStyleType': 'NORMAL_TEXT',
+                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'},
+                    'fontSize': {'magnitude': 10, 'unit': 'PT'}
+                },
+                'fields': 'namedStyleType,spaceBelow,fontSize'
             }
         })
-        
+
+        # === SECTION 4: LISTE DES POI ===
+        requests.append({
+            'insertText': {
+                'location': {'index': current_index},
+                'text': f"\n4. LISTE DES POI ({len(pois)})\n"
+            }
+        })
+        current_index += len(f"\n4. LISTE DES POI ({len(pois)})\n")
+
+        requests.append({
+            'updateParagraphStyle': {
+                'range': {
+                    'startIndex': current_index - len(f"\n4. LISTE DES POI ({len(pois)})\n"),
+                    'endIndex': current_index
+                },
+                'paragraphStyle': {
+                    'namedStyleType': 'HEADING_1',
+                    'spaceAbove': {'magnitude': 18, 'unit': 'PT'},
+                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
+                },
+                'fields': 'namedStyleType,spaceAbove,spaceBelow'
+            }
+        })
+
         if not pois:
             requests.append({
                 'insertText': {
                     'location': {'index': current_index},
-                    'text': "Aucun POI trouve\n"
+                    'text': "Aucun POI trouvé\n"
                 }
             })
-            current_index += len("Aucun POI trouve\n")
+            current_index += len("Aucun POI trouvé\n")
         else:
-            # TOUS les POI - AUCUNE LIMITE
-            for i, poi in enumerate(pois, 1):
-                name = self._safe_str(poi, 'name', 'Sans nom')
-                poi_type = self._safe_str(poi, 'type', '')
-                lat = self._safe_float(poi, 'lat', 0.0)
-                lon = self._safe_float(poi, 'lon', 0.0)
-                dist = self._safe_float(poi, 'distance', 0.0)
-                address = self._safe_str(poi, 'address', '')
-                phone = self._safe_str(poi, 'phone', '')
-                website = self._safe_str(poi, 'website', '')
-                hours = self._safe_str(poi, 'opening_hours', '')
-                desc = self._safe_str(poi, 'description', '')
-                gmaps = self._safe_str(poi, 'google_maps_url', '')
-                overpass = self._safe_str(poi, 'overpass_url', '')
-                
-                # En-tete du POI
-                header = f"{i}. {name}"
-                if poi_type:
-                    header += f" ({poi_type})"
-                if dist > 0:
-                    header += f" - {dist:.2f} km"
-                header += "\n"
-                
-                requests.append({
-                    'insertText': {
-                        'location': {'index': current_index},
-                        'text': header
-                    }
-                })
-                current_index += len(header)
-                
-                # Details
-                details = []
-                if lat != 0 or lon != 0:
-                    details.append(f"  - Coordonnees: {lat:.6f}, {lon:.6f}")
-                if address:
-                    details.append(f"  - Adresse: {address}")
-                if phone:
-                    details.append(f"  - Telephone: {phone}")
-                if website:
-                    details.append(f"  - Site web: {website}")
-                if hours:
-                    details.append(f"  - Horaires: {hours}")
-                if desc:
-                    details.append(f"  - Description: {desc}")
-                if gmaps:
-                    details.append(f"  - Google Maps: {gmaps}")
-                if overpass:
-                    details.append(f"  - Overpass: {overpass}")
-                
-                if details:
-                    detail_text = "\n".join(details) + "\n"
-                    requests.append({
-                        'insertText': {
-                            'location': {'index': current_index},
-                            'text': detail_text
-                        }
-                    })
-                    current_index += len(detail_text)
-                
-                # Ligne de separation
-                requests.append({
-                    'insertText': {
-                        'location': {'index': current_index},
-                        'text': "\n"
-                    }
-                })
-                current_index += 1
-            
-            logger.info(f"Google Docs: {len(pois)} POI exportes")
-        
+            # Tableau des POI (compact)
+            poi_rows = [['#', 'Type', 'Nom', 'Distance']]
+            for i, poi in enumerate(pois[:100], 1):  # Limite à 100 dans le tableau
+                poi_rows.append([
+                    str(i),
+                    self._safe_str(poi, 'type', '')[:12],
+                    self._safe_str(poi, 'name', 'Sans nom')[:20],
+                    f"{self._safe_float(poi, 'distance', 0.0):.2f} km"
+                ])
+
+            if len(pois) > 100:
+                poi_rows.append(['', '...', f'... et {len(pois)-100} autres', ''])
+
+            requests.extend(self._create_table(poi_rows, current_index, True))
+            current_index += self._get_table_length(poi_rows)
+
         return requests
+
+    def _create_table(self, rows: List[List[str]], start_index: int, compact: bool = False) -> List[Dict]:
+        """Crée un tableau formaté"""
+        if len(rows) < 2:
+            return []
+
+        requests = []
+        num_cols = len(rows[0])
+
+        # Insérer le tableau
+        table_text = "\n" + "\n".join([" | ".join(row) for row in rows]) + "\n\n"
+        requests.append({
+            'insertText': {
+                'location': {'index': start_index},
+                'text': table_text
+            }
+        })
+
+        # Style du tableau - pour Google Docs, on utilise des tabulations
+        # et on applique des styles de paragraphe
+
+        return requests
+
+    def _get_table_length(self, rows: List[List[str]]) -> int:
+        """Calcule la longueur du tableau en caractères"""
+        if not rows:
+            return 0
+        return len("\n" + "\n".join([" | ".join(row) for row in rows]) + "\n\n")
