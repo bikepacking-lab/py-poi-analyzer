@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import requests
 import json
 from typing import List, Dict, Any, Optional, Tuple
@@ -491,42 +493,64 @@ class POIDetector:
         if not bboxes or not poi_types:
             return []
         
-        # FORCER LE MODE SERIE pour eviter les timeouts
-        effective_workers = 1
-        logger.info(f"Detection POI: {len(bboxes)} bboxes (mode serie obligatoire)")
+        # Nombre max de workers (parallèle), 3 limite technique Overpass
+        effective_workers = min(max_workers, 3)
+        logger.info(f"Detection POI: {len(bboxes)} bboxes")
         
         all_pois = []
         seen = set()
         max_radius = max(radii.values()) if radii else 0.0
         
         # Traitement SERIE un par un avec pauses
-        for i, bbox in enumerate(bboxes):
-            try:
-                logger.info(f"Bbox {i+1}/{len(bboxes)} - debut")
+        if effective_workers == 1:
+            for i, bbox in enumerate(bboxes):
+                try:
+                    logger.info(f"Bbox {i+1}/{len(bboxes)} - debut")
                 
-                pois = self._extract_from_bbox(
-                    bbox, poi_types, tags_config, max_radius, max_tags_per_type
-                )
+                    pois = self._extract_from_bbox(
+                        bbox, poi_types, tags_config, max_radius, max_tags_per_type
+                    )
                 
-                if pois:
-                    new_count = 0
-                    for poi in pois:
-                        if poi.id not in seen:
-                            seen.add(poi.id)
-                            all_pois.append(poi)
-                            new_count += 1
-                    logger.info(f"Bbox {i+1}/{len(bboxes)}: {len(pois)} POI trouves ({new_count} nouveaux)")
-                else:
-                    logger.info(f"Bbox {i+1}/{len(bboxes)}: aucun POI")
+                    if pois:
+                        new_count = 0
+                        for poi in pois:
+                            if poi.id not in seen:
+                                seen.add(poi.id)
+                                all_pois.append(poi)
+                                new_count += 1
+                        logger.info(f"Bbox {i+1}/{len(bboxes)}: {len(pois)} POI trouves ({new_count} nouveaux)")
+                    else:
+                        logger.info(f"Bbox {i+1}/{len(bboxes)}: aucun POI")
                     
-            except Exception as e:
-                logger.error(f"Erreur bbox {i+1}: {e}")
+                except Exception as e:
+                    logger.error(f"Erreur bbox {i+1}: {e}")
             
-            # Pause obligatoire entre chaque bbox
-            if i < len(bboxes) - 1:
-                pause = 3.0
-                logger.debug(f"Pause de {pause}s avant la prochaine bbox")
-                time.sleep(pause)
+                # Pause obligatoire entre chaque bbox
+                if i < len(bboxes) - 1:
+                    pause = 3.0
+                    logger.debug(f"Pause de {pause}s avant la prochaine bbox")
+                    time.sleep(pause)
+        else:
+            # Mode parallele - UTILISE effective_workers
+            with ThreadPoolExecutor(max_workers=effective_workers) as executor:
+                futures = []
+                for bbox in bboxes:
+                    future = executor.submit(
+                        self._extract_from_bbox,
+                        bbox, poi_types, tags_config, max_radius, max_tags_per_type
+                    )
+                    futures.append(future)
+                    time.sleep(0.5)  # Espacement des soumissions
+            
+                for future in as_completed(futures):
+                    try:
+                        pois = future.result(timeout=90)
+                        for poi in pois:
+                            if poi.id not in seen:
+                                seen.add(poi.id)
+                                all_pois.append(poi)
+                    except Exception as e:
+                        logger.error(f"Erreur parallele: {e}")
         
         logger.info(f"Total: {len(all_pois)} POI detectes")
         return all_pois

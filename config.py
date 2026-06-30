@@ -30,13 +30,13 @@ ANALYSIS_TIMEOUT_SECONDS = 600
 POI_API_URL = 'https://overpass-api.de/api/interpreter'
 POI_ENABLED = True
 OVERPASS_DEBUG_MODE = True
-MAX_TAGS_PER_TYPE = 20
+MAX_TAGS_PER_TYPE = 20 # nombers filters per tag
 
 # Configuration cache
 CACHE_REDIS_URL = 'redis://localhost:6379/0'
 CACHE_TTL_SECONDS = 2
 CACHE_REDIS_OPTIONS = {
-    'protocol': 2,  # Force RESP2 au lieu de RESP3
+    'protocol': 2,
     'decode_responses': False,
     'socket_connect_timeout': 5,
     'socket_timeout': 5,

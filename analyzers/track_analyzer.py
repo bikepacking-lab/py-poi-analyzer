@@ -295,7 +295,6 @@ class TrackAnalyzer:
     
     def _save_summary(self, input_file, saved_file, stats, reports):
         """Sauvegarde le summary JSON"""
-        # summary_file = self.analysis_dir / 'summary.json' # f'analysis_report_{self.analysis_dir }_summary.json'
         summary_file = self.analysis_dir / f'analysis_report_{self.analysis_id}_summary.json'
         with open(summary_file, 'w', encoding='utf-8') as f:
             json.dump({

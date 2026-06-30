@@ -161,12 +161,16 @@ class SplitManager:
             return {
                 'enabled': True,
                 'threshold_km': MAX_GPX_DISTANCE_KM,
-                'max_distance_km': round(MAX_GPX_DISTANCE_KM, 1),  # Pour info, pas utilise
+                'max_distance_km': round(MAX_GPX_DISTANCE_KM, 1),
                 'segments_count': segments_count,
-                'segments': segment_info or []
+                'segments': segment_info or [],
+                'reason': 'NA'
             }
         return {
             'enabled': False,
             'threshold_km': MAX_GPX_DISTANCE_KM,
+            'max_distance_km': round(MAX_GPX_DISTANCE_KM, 1),
+            'segments_count': 'NA',
+            'segments': [],
             'reason': 'Distance inferieure au seuil'
         }

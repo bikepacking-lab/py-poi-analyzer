@@ -90,8 +90,9 @@ Horodatage : {'Oui' if results['summary']['track_info']['has_time'] else 'Non'}
 
 Découpage
 ───────────────────────────────────────────────────────────
-Activé     : {results['summary']['split_info']['enabled']}
-Max segment: {results['summary']['split_info']['max_distance_km']} km
+Activé         : {results['summary']['split_info']['enabled']}
+Max segment km : {results['summary']['split_info']['max_distance_km']} km
+Nombre segment : {results['summary']['split_info']['segments_count']}
 
 Recherche POI
 ───────────────────────────────────────────────────────────
@@ -123,7 +124,7 @@ Recommandations & Conseils
 ───────────────────────────────────────────────────────────
 - {"\n- ".join(results['summary']['recommendations'])}
 """)
-                
+
         print("="*60 + "\n")
         
     except Exception as e:
