@@ -12,7 +12,7 @@ from config import (
     MAX_GPX_DISTANCE_KM, ANALYSIS_MAX_PARALLEL,
     REPORT_DIR, DEFAULT_POI_TYPES, DEFAULT_RADII,
     DEFAULT_INTERVALS, DEFAULT_REPORT_FORMATS,
-    DEFAULT_POI_TAGS_OSM
+    DEFAULT_POI_TAGS_OSM, MAX_TAGS_PER_TYPE
 )
 from core.gpx_processor import GPXProcessor
 from core.poi_detector import POIDetector
@@ -103,7 +103,7 @@ class TrackAnalyzer:
             pois = self.poi_detector.detect_pois(
                 unique_bboxes, poi_types, DEFAULT_POI_TAGS_OSM, radii,
                 max_workers=ANALYSIS_MAX_PARALLEL,
-                max_tags_per_type=10
+                max_tags_per_type=MAX_TAGS_PER_TYPE
             )
         else:
             pois = []

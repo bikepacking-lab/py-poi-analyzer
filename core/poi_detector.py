@@ -10,8 +10,10 @@ import math
 import re
 import threading
 import hashlib
-from config import AVAILABLE_POI_TAGS_OSM
-from config import POI_API_URL, OVERPASS_DEBUG_MODE
+from config import (
+    AVAILABLE_POI_TAGS_OSM, POI_API_URL, 
+    OVERPASS_DEBUG_MODE, MAX_TAGS_PER_TYPE
+)
         
 logger = logging.getLogger(__name__)
 
@@ -99,7 +101,7 @@ class POIDetector:
     def _build_overpass_query(self, bbox: Tuple[float, float, float, float], 
                              poi_types: List[str], 
                              tags_config: Dict,
-                             max_tags_per_type: int = 10) -> str:
+                             max_tags_per_type: int = MAX_TAGS_PER_TYPE) -> str:
         """Construit une requete Overpass"""
         lat_min, lon_min, lat_max, lon_max = bbox
         bbox_str = f"{lat_min:.6f},{lon_min:.6f},{lat_max:.6f},{lon_max:.6f}"
@@ -117,7 +119,6 @@ class POIDetector:
             
             tags_list = tags_config[poi_type]
         
-            # Si max_tags_per_type est defini, on limite
             if max_tags_per_type and max_tags_per_type > 0:
                 tags_list = tags_list[:max_tags_per_type]
                 
@@ -425,7 +426,7 @@ class POIDetector:
                           poi_types: List[str], 
                           tags_config: Dict,
                           radius: float,
-                          max_tags_per_type: int = 10) -> List[POI]:
+                          max_tags_per_type: int = MAX_TAGS_PER_TYPE) -> List[POI]:
         """Extrait les POI d'une bbox avec cache"""
         if not bbox or not poi_types:
             return []
@@ -475,7 +476,7 @@ class POIDetector:
                    tags_config: Dict,
                    radii: Dict[str, float],
                    max_workers: int = 1,
-                   max_tags_per_type: int = 10) -> List[POI]:
+                   max_tags_per_type: int = MAX_TAGS_PER_TYPE) -> List[POI]:
         """
         Detecte les POI - MODE SERIE OBLIGATOIRE
         
@@ -485,7 +486,7 @@ class POIDetector:
             tags_config: Configuration des tags OSM
             radii: Dict[str, float] - Rayons par type (en metres)
             max_workers: Force a 1 (mode serie)
-            max_tags_per_type: Nombre max de tags par type (2 pour performance)
+            max_tags_per_type: Nombre max de tags par type (le nombre peut ralentir la recherche)
         """
         if not bboxes or not poi_types:
             return []

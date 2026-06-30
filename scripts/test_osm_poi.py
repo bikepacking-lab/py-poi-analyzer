@@ -7,7 +7,7 @@ Test de la détection POI avec les tags OSM complexes
 import logging
 from core.poi_detector import POIDetector
 from core.cache_manager import get_cache_manager
-from config import DEFAULT_POI_TAGS_OSM, DEFAULT_RADII
+from config import DEFAULT_POI_TAGS_OSM, DEFAULT_RADII, MAX_TAGS_PER_TYPE
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,7 +56,7 @@ def test_osm_tags():
             poi_types,
             tags_config,
             max(DEFAULT_RADII.values()) / 1000,  # Convertir en km
-            max_tags_per_type=5
+            max_tags_per_type=MAX_TAGS_PER_TYPE
         )
         
         print(f"\n✅ {len(pois)} POI détectés:")
