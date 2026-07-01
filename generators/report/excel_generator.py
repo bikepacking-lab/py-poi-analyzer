@@ -8,6 +8,8 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+
+from core import gpx_processor
 from ..base_generator import BaseGenerator
 
 logger = logging.getLogger(__name__)
@@ -72,7 +74,7 @@ class ExcelGenerator(BaseGenerator):
             poi_search = summary.get('poi_search', {}) or {}
             poi_results = poi_search.get('results', {}) or {}
             performance = summary.get('performance', {}) or {}
-        
+            
             summary_data = {
                 'Categorie': [
                     'ID Analyse',
@@ -87,7 +89,11 @@ class ExcelGenerator(BaseGenerator):
                     'POI non nommes',
                     'Temps total (s)',
                     'Temps recherche POI (s)',
-                    'Temps calcul distances (s)'
+                    'Temps calcul distances (s)',
+                    'Denivele positif (m)',
+                    'Denivele negatif (m)',
+                    'Altitude min (m)',
+                    'Altitude max (m)'
                 ],
                 'Valeur': [
                     str(data.get('analysis_id', '')),
@@ -102,7 +108,11 @@ class ExcelGenerator(BaseGenerator):
                     int(poi_results.get('unnamed_count', 0)),
                     float(performance.get('total_duration_seconds', 0)),
                     float(performance.get('search_duration_seconds', 0)),
-                    float(performance.get('distance_calculation_seconds', 0))
+                    float(performance.get('distance_calculation_seconds', 0)),
+                    float(track_info.get('total_ascent_m', 0)) ,
+                    float(track_info.get('total_descent_m', 0)),
+                    float(track_info.get('min_elevation_m', 'N/A')),
+                    float(track_info.get('max_elevation_m', 'N/A'))
                 ]
             }
         

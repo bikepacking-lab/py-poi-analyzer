@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from pathlib import Path
-import os
 
 # Chemins de base
 BASE_DIR = Path(__file__).resolve().parent
@@ -21,10 +20,15 @@ MAX_GPX_SIZE_MB = 5
 MAX_GPX_DISTANCE_KM = 250.0
 # CHUNK_DISTANCE_KM = 15.0
 GPX_AUTO_SPLIT = True
+# Configuration de l'élévation (dénivelé)
+ELEVATION_MIN_VARIATION = 10.0
+ELEVATION_SMOOTHING_WINDOW = 5
+ELEVATION_SUBSAMPLE_STEP = 3
+ELEVATION_SUBSAMPLE_THRESHOLD = 1000
 
 # Configuration de l'analyse
 ANALYSIS_MAX_PARALLEL = 2
-ANALYSIS_TIMEOUT_SECONDS = 600
+ANALYSIS_TIMEOUT_SECONDS = 1200
 
 # Configuration POI
 POI_API_URL = 'https://overpass-api.de/api/interpreter'
@@ -62,7 +66,7 @@ DEFAULT_INTERVALS = {
     "pharmacy": 40.0
 }
 
-DEFAULT_REPORT_FORMATS = ["json", "csv", "xlsx", "docx", "pdf", "pdf-map", "docx-map", "gdocs", "gdocs-map"]
+DEFAULT_REPORT_FORMATS = ["json", "csv", "xlsx", "docx", "pdf", "pdf-map", "docx-map", "gdocs", "gdocs-map","fit-data"]
 AVAILABLE_REPORT_FORMATS = [
     {"type": "json", "label": "Format JSON Summary Data"},
     {"type": "csv", "label": "Report Format CSV"},
@@ -76,7 +80,7 @@ AVAILABLE_REPORT_FORMATS = [
     {"type": "gpx-enriched", "label": "Format GPX Enrichi POI"},
     {"type": "kml-enriched", "label": "Format KML Enrichi POI"},
     {"type": "tcx-enriched", "label": "Format TCX Enrichi POI"},
-    {"type": "fit-data", "label": "Données FIT (JSON + outils conversion)"}
+    {"type": "fit-data", "label": "Données FIT Enrichi POI (JSON Data + Outils conversion FIT)"}
 ]
 
 DEFAULT_POI_TYPES = ["water", "refueling", "bivouac"]

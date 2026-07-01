@@ -161,10 +161,12 @@ class GDocsGenerator(BaseGenerator):
 
         except Exception as e:
             logger.error(f"Erreur generation Google Docs: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return None
 
     def _build_content(self, data: Dict[str, Any]) -> List[Dict]:
-        """Construit le contenu du document"""
+        """Construit le contenu du document avec style professionnel"""
         requests = []
         current_index = 1
 
@@ -193,36 +195,33 @@ class GDocsGenerator(BaseGenerator):
                 },
                 'paragraphStyle': {
                     'namedStyleType': 'TITLE',
-                    'alignment': 'CENTER',
-                    'spacingMode': 'NEVER_COLLAPSE',
-                    'spaceAbove': {'magnitude': 12, 'unit': 'PT'},
-                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
+                    'alignment': 'CENTER'
                 },
-                'fields': 'namedStyleType,alignment,spacingMode,spaceAbove,spaceBelow'
+                'fields': 'namedStyleType,alignment'
             }
         })
 
         # === SOUS-TITRE ===
+        subtitle = f"ID: {data.get('analysis_id', 'N/A')} | {data.get('timestamp', '').split('T')[0]}\n\n"
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': f"ID: {data.get('analysis_id', 'N/A')} | {data.get('timestamp', '').split('T')[0]}\n\n"
+                'text': subtitle
             }
         })
-        current_index += len(f"ID: {data.get('analysis_id', 'N/A')} | {data.get('timestamp', '').split('T')[0]}\n\n")
+        current_index += len(subtitle)
 
         requests.append({
             'updateParagraphStyle': {
                 'range': {
-                    'startIndex': current_index - len(f"ID: {data.get('analysis_id', 'N/A')} | {data.get('timestamp', '').split('T')[0]}\n\n"),
+                    'startIndex': current_index - len(subtitle),
                     'endIndex': current_index
                 },
                 'paragraphStyle': {
                     'namedStyleType': 'SUBTITLE',
-                    'alignment': 'CENTER',
-                    'spaceBelow': {'magnitude': 12, 'unit': 'PT'}
+                    'alignment': 'CENTER'
                 },
-                'fields': 'namedStyleType,alignment,spaceBelow'
+                'fields': 'namedStyleType,alignment'
             }
         })
 
@@ -242,149 +241,149 @@ class GDocsGenerator(BaseGenerator):
                     'endIndex': current_index
                 },
                 'paragraphStyle': {
-                    'namedStyleType': 'HEADING_1',
-                    'spaceAbove': {'magnitude': 18, 'unit': 'PT'},
-                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
+                    'namedStyleType': 'HEADING_1'
                 },
-                'fields': 'namedStyleType,spaceAbove,spaceBelow'
+                'fields': 'namedStyleType'
             }
         })
 
-        # Tableau de résumé
-        summary_rows = [
-            ['Métrique', 'Valeur'],
-            ['Fichier source', data.get('input_file', 'N/A')],
-            ['Distance totale', f"{track_info.get('total_distance_km', 0):.1f} km"],
-            ['Points', str(track_info.get('total_points', 0))],
-            ['POI trouvés', str(poi_results.get('total_found', 0))],
-            ['POI nommés', str(poi_results.get('named_count', 0))],
-            ['POI non nommés', str(poi_results.get('unnamed_count', 0))],
-            ['Temps total', f"{performance.get('total_duration_seconds', 0):.1f} s"]
-        ]
+        # === CORRECTION: resume textuel bien construit ===
+        total_ascent = track_info.get('total_ascent_m', 0)
+        total_descent = track_info.get('total_descent_m', 0)
+        min_elev = track_info.get('min_elevation_m', 'N/A')
+        max_elev = track_info.get('max_elevation_m', 'N/A')
 
-        # Créer le tableau
-        requests.extend(self._create_table(summary_rows, current_index))
-        current_index += self._get_table_length(summary_rows)
+        resume_text = (
+            f"Fichier source: {data.get('input_file', 'N/A')}\n"
+            f"Distance totale: {track_info.get('total_distance_km', 0):.1f} km\n"
+            f"Nombre de points: {track_info.get('total_points', 0)}\n"
+            f"Denivele positif: {total_ascent:.0f} m\n"
+            f"Denivele negatif: {total_descent:.0f} m\n"
+            f"Altitude min: {min_elev} m\n"
+            f"Altitude max: {max_elev} m\n"
+            f"Total POI trouves: {poi_results.get('total_found', 0)}\n"
+            f"POI nommes: {poi_results.get('named_count', 0)}\n"
+            f"POI non nommes: {poi_results.get('unnamed_count', 0)}\n"
+            f"Temps total: {performance.get('total_duration_seconds', 0):.1f} secondes\n\n"
+        )
 
-        # === SECTION 2: POI PAR TYPE ===
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': "\n2. POI PAR TYPE\n"
+                'text': resume_text
             }
         })
-        current_index += len("\n2. POI PAR TYPE\n")
+        current_index += len(resume_text)
 
-        requests.append({
-            'updateParagraphStyle': {
-                'range': {
-                    'startIndex': current_index - len("\n2. POI PAR TYPE\n"),
-                    'endIndex': current_index
-                },
-                'paragraphStyle': {
-                    'namedStyleType': 'HEADING_1',
-                    'spaceAbove': {'magnitude': 18, 'unit': 'PT'},
-                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
-                },
-                'fields': 'namedStyleType,spaceAbove,spaceBelow'
-            }
-        })
-
-        # Tableau des types
+        # === SECTION 2: POI PAR TYPE ===
         by_type = poi_results.get('by_type', {})
         if by_type:
-            type_rows = [['Type de POI', 'Nombre']]
-            for poi_type, count in by_type.items():
-                type_rows.append([poi_type.capitalize(), str(count)])
-            type_rows.append(['Total', str(poi_results.get('total_found', 0))])
+            requests.append({
+                'insertText': {
+                    'location': {'index': current_index},
+                    'text': "2. POI PAR TYPE\n"
+                }
+            })
+            current_index += len("2. POI PAR TYPE\n")
 
-            requests.extend(self._create_table(type_rows, current_index))
-            current_index += self._get_table_length(type_rows)
+            requests.append({
+                'updateParagraphStyle': {
+                    'range': {
+                        'startIndex': current_index - len("2. POI PAR TYPE\n"),
+                        'endIndex': current_index
+                    },
+                    'paragraphStyle': {
+                        'namedStyleType': 'HEADING_1'
+                    },
+                    'fields': 'namedStyleType'
+                }
+            })
+
+            for poi_type, count in by_type.items():
+                line = f"  - {poi_type.capitalize()}: {count}\n"
+                requests.append({
+                    'insertText': {
+                        'location': {'index': current_index},
+                        'text': line
+                    }
+                })
+                current_index += len(line)
+
+            # Total
+            total_line = f"\nTotal: {poi_results.get('total_found', 0)} POI\n\n"
+            requests.append({
+                'insertText': {
+                    'location': {'index': current_index},
+                    'text': total_line
+                }
+            })
+            current_index += len(total_line)
 
         # === SECTION 3: CONFIGURATION ===
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': "\n3. CONFIGURATION DE LA RECHERCHE\n"
+                'text': "3. CONFIGURATION DE LA RECHERCHE\n"
             }
         })
-        current_index += len("\n3. CONFIGURATION DE LA RECHERCHE\n")
+        current_index += len("3. CONFIGURATION DE LA RECHERCHE\n")
 
         requests.append({
             'updateParagraphStyle': {
                 'range': {
-                    'startIndex': current_index - len("\n3. CONFIGURATION DE LA RECHERCHE\n"),
+                    'startIndex': current_index - len("3. CONFIGURATION DE LA RECHERCHE\n"),
                     'endIndex': current_index
                 },
                 'paragraphStyle': {
-                    'namedStyleType': 'HEADING_1',
-                    'spaceAbove': {'magnitude': 18, 'unit': 'PT'},
-                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
+                    'namedStyleType': 'HEADING_1'
                 },
-                'fields': 'namedStyleType,spaceAbove,spaceBelow'
+                'fields': 'namedStyleType'
             }
         })
 
-        # Configuration textuelle
-        config_text = f"Types recherchés: {', '.join(config.get('types', []))}\n"
+        # Configuration
+        config_text = f"Types recherches: {', '.join(config.get('types', []))}\n"
         config_text += f"Rayons: {json.dumps(config.get('radii', {}), ensure_ascii=False)}\n"
         config_text += f"Intervalles: {json.dumps(config.get('intervals', {}), ensure_ascii=False)}\n"
 
-        # Filtres OSM
+        # Filtres OSM (limités pour lisibilité)
         osm_filters = config.get('osm_filters', {})
         if osm_filters:
-            config_text += "\nFiltres OSM utilisés:\n"
+            config_text += "\nFiltres OSM utilises:\n"
             for poi_type, filters in osm_filters.items():
                 config_text += f"\n  {poi_type.capitalize()}:\n"
-                for f in filters[:5]:
+                for f in filters[:3]:
                     config_text += f"    - {f}\n"
-                if len(filters) > 5:
-                    config_text += f"    ... et {len(filters) - 5} autres filtres\n"
+                if len(filters) > 3:
+                    config_text += f"    ... et {len(filters) - 3} autres filtres\n"
 
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': config_text
+                'text': config_text + "\n"
             }
         })
-        current_index += len(config_text)
-
-        requests.append({
-            'updateParagraphStyle': {
-                'range': {
-                    'startIndex': current_index - len(config_text),
-                    'endIndex': current_index
-                },
-                'paragraphStyle': {
-                    'namedStyleType': 'NORMAL_TEXT',
-                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'},
-                    'fontSize': {'magnitude': 10, 'unit': 'PT'}
-                },
-                'fields': 'namedStyleType,spaceBelow,fontSize'
-            }
-        })
+        current_index += len(config_text) + 1
 
         # === SECTION 4: LISTE DES POI ===
         requests.append({
             'insertText': {
                 'location': {'index': current_index},
-                'text': f"\n4. LISTE DES POI ({len(pois)})\n"
+                'text': f"4. LISTE DES POI ({len(pois)})\n"
             }
         })
-        current_index += len(f"\n4. LISTE DES POI ({len(pois)})\n")
+        current_index += len(f"4. LISTE DES POI ({len(pois)})\n")
 
         requests.append({
             'updateParagraphStyle': {
                 'range': {
-                    'startIndex': current_index - len(f"\n4. LISTE DES POI ({len(pois)})\n"),
+                    'startIndex': current_index - len(f"4. LISTE DES POI ({len(pois)})\n"),
                     'endIndex': current_index
                 },
                 'paragraphStyle': {
-                    'namedStyleType': 'HEADING_1',
-                    'spaceAbove': {'magnitude': 18, 'unit': 'PT'},
-                    'spaceBelow': {'magnitude': 6, 'unit': 'PT'}
+                    'namedStyleType': 'HEADING_1'
                 },
-                'fields': 'namedStyleType,spaceAbove,spaceBelow'
+                'fields': 'namedStyleType'
             }
         })
 
@@ -392,53 +391,47 @@ class GDocsGenerator(BaseGenerator):
             requests.append({
                 'insertText': {
                     'location': {'index': current_index},
-                    'text': "Aucun POI trouvé\n"
+                    'text': "Aucun POI trouve\n"
                 }
             })
-            current_index += len("Aucun POI trouvé\n")
+            current_index += len("Aucun POI trouve\n")
         else:
-            # Tableau des POI (compact)
-            poi_rows = [['#', 'Type', 'Nom', 'Distance']]
-            for i, poi in enumerate(pois[:100], 1):  # Limite à 100 dans le tableau
-                poi_rows.append([
-                    str(i),
-                    self._safe_str(poi, 'type', '')[:12],
-                    self._safe_str(poi, 'name', 'Sans nom')[:20],
-                    f"{self._safe_float(poi, 'distance', 0.0):.2f} km"
-                ])
-
-            if len(pois) > 100:
-                poi_rows.append(['', '...', f'... et {len(pois)-100} autres', ''])
-
-            requests.extend(self._create_table(poi_rows, current_index, True))
-            current_index += self._get_table_length(poi_rows)
+            for i, poi in enumerate(pois, 1):
+                name = self._safe_str(poi, 'name', 'Sans nom')
+                poi_type = self._safe_str(poi, 'type', '')
+                distance = self._safe_float(poi, 'distance', 0.0)
+                address = self._safe_str(poi, 'address', '')
+                phone = self._safe_str(poi, 'phone', '')
+                
+                line = f"{i}. {name}"
+                if poi_type:
+                    line += f" ({poi_type})"
+                if distance > 0:
+                    line += f" - {distance:.2f} km"
+                line += "\n"
+                
+                requests.append({
+                    'insertText': {
+                        'location': {'index': current_index},
+                        'text': line
+                    }
+                })
+                current_index += len(line)
+                
+                # Détails supplémentaires (indentés)
+                details = []
+                if address:
+                    details.append(f"   Adresse: {address}")
+                if phone:
+                    details.append(f"   Tel: {phone}")
+                
+                for detail in details:
+                    requests.append({
+                        'insertText': {
+                            'location': {'index': current_index},
+                            'text': detail + "\n"
+                        }
+                    })
+                    current_index += len(detail) + 1
 
         return requests
-
-    def _create_table(self, rows: List[List[str]], start_index: int, compact: bool = False) -> List[Dict]:
-        """Crée un tableau formaté"""
-        if len(rows) < 2:
-            return []
-
-        requests = []
-        num_cols = len(rows[0])
-
-        # Insérer le tableau
-        table_text = "\n" + "\n".join([" | ".join(row) for row in rows]) + "\n\n"
-        requests.append({
-            'insertText': {
-                'location': {'index': start_index},
-                'text': table_text
-            }
-        })
-
-        # Style du tableau - pour Google Docs, on utilise des tabulations
-        # et on applique des styles de paragraphe
-
-        return requests
-
-    def _get_table_length(self, rows: List[List[str]]) -> int:
-        """Calcule la longueur du tableau en caractères"""
-        if not rows:
-            return 0
-        return len("\n" + "\n".join([" | ".join(row) for row in rows]) + "\n\n")

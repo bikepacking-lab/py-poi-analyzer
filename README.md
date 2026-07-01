@@ -210,6 +210,29 @@ AVAILABLE_POI_TAGS_OSM["new-poi"] = [
 3. Acceptez les permissions
 4. Le token est sauvegarde dans `credentials/token_gdocs.json`
 
+
+
+## Liste des rapports disponibles
+
+### Rapports d'analyse
+
+* Format JSON Summary Data (Résumé des données)
+* Format CSV (délémiteur standard : virgule)
+* Format Excel
+* Format Word
+* Format Word avec Carte et POI
+* Format PDF
+* Format PDF avec Carte et POI
+* Format Google Docs
+* Format Google Docs avec Carte et POI
+
+### Formats enrichis
+
+* GPX Enrichis des POI
+* KML Enrichis des POI
+* TCX Enrichis des POI
+* FIT Enrichis des POI (Format JSON + Outil Conversion Format FIT)
+
 ## Support
 
 * Pour toute question ou problème : support@bikepacking-analyzer.com
@@ -234,6 +257,12 @@ Pousser vers la branche
 
 Créer une Pull Request
 
+## Remerciements
+
+Outil de conversion JSON Date vert Fromat FIT :[ github.com/dapperdal/technogym_json_to_fit](https://github.com/dapperdal/technogym_json_to_fit)
+
+Overpass API Recherche POI : [openstreetmap.org](https://openstreetmap.org/)
+
 ## Résumé des améliorations
 
 - Architecture évolutive : Pattern Strategy pour les générateurs, facilitant l'ajout de nouveaux formats
@@ -241,4 +270,3 @@ Créer une Pull Request
 - Support FIT : Génération de données FIT (au format JSON pour l'instant, prêt pour fitdecode)
 - Documentation complète : Markdown détaillé avec sections pour les utilisateurs et les développeurs
 - Extensibilité : Facile d'ajouter de nouveaux POI, formats, ou fonctionnalités
-

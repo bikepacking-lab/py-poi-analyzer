@@ -10,6 +10,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
+from core import gpx_processor
+
 from ..base_generator import BaseGenerator
 
 logger = logging.getLogger(__name__)
@@ -152,7 +154,7 @@ class PDFGenerator(BaseGenerator):
         poi_search = summary.get('poi_search', {})
         poi_results = poi_search.get('results', {})
         performance = summary.get('performance', {})
-    
+
         resume_data = [
             ['Metrique', 'Valeur'],
             ['Distance totale', f"{track_info.get('total_distance_km', 0)} km"],
@@ -163,7 +165,11 @@ class PDFGenerator(BaseGenerator):
             ['POI non nommes', str(poi_results.get('unnamed_count', 0))],
             ['Temps total', f"{performance.get('total_duration_seconds', 0):.1f} s"],
             ['Temps recherche POI', f"{performance.get('search_duration_seconds', 0):.1f} s"],
-            ['Temps calcul distances', f"{performance.get('distance_calculation_seconds', 0):.1f} s"]
+            ['Temps calcul distances', f"{performance.get('distance_calculation_seconds', 0):.1f} s"],
+            ['Denivele positif', f"{track_info.get('total_ascent_m', 0)} m"],
+            ['Denivele negatif', f"{track_info.get('total_descent_m', 0)} m"],
+            ['Altitude min', f"{track_info.get('min_elevation_m', 'N/A')} m"],
+            ['Altitude max', f"{track_info.get('max_elevation_m', 'N/A')} m"]
         ]
     
         table = Table(resume_data, colWidths=[6*cm, 8*cm])
@@ -221,7 +227,7 @@ class PDFGenerator(BaseGenerator):
         story.append(Paragraph("Details des POI:", styles['heading3']))
         story.append(Spacer(1, 0.3*cm))
         
-        for i, poi in enumerate(pois[:50], 1):  # Limite a 50 pour la performance
+        for i, poi in enumerate(pois, 1):
             story.append(Paragraph(f"{i}. {poi.get('name', 'Sans nom')}", styles['heading3']))
             
             details = []
@@ -247,7 +253,7 @@ class PDFGenerator(BaseGenerator):
             
             story.append(Spacer(1, 0.2*cm))
         
-        if len(pois) > 50:
-            story.append(Paragraph(f"... et {len(pois) - 50} autres POI", styles['normal']))
+        # if len(pois) > 50:
+        #     story.append(Paragraph(f"... et {len(pois) - 50} autres POI", styles['normal']))
         
         return story

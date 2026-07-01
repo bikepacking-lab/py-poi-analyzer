@@ -11,7 +11,7 @@ def register_all_generators():
     from .report.pdf_generator import PDFGenerator
     from .report.pdf_map_generator import PDFMapGenerator
     from .report.gdocs_generator import GDocsGenerator
-    from .report.gdocs_map_generator import GDocsMapGenerator  # NOUVEAU
+    from .report.gdocs_map_generator import GDocsMapGenerator
 
     from .enriched.gpx_generator import GPXGenerator
     from .enriched.kml_generator import KMLGenerator
@@ -26,7 +26,7 @@ def register_all_generators():
     GeneratorRegistry.register('pdf', PDFGenerator)
     GeneratorRegistry.register('pdf-map', PDFMapGenerator)
     GeneratorRegistry.register('gdocs', GDocsGenerator)
-    GeneratorRegistry.register('gdocs-map', GDocsMapGenerator)  # NOUVEAU
+    GeneratorRegistry.register('gdocs-map', GDocsMapGenerator)
 
     GeneratorRegistry.register('gpx-enriched', GPXGenerator)
     GeneratorRegistry.register('kml-enriched', KMLGenerator)

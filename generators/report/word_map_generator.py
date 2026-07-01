@@ -45,16 +45,25 @@ class WordMapGenerator(BaseGenerator):
             doc.add_paragraph(f'Fichier: {data.get("input_file", "N/A")}')
             doc.add_paragraph(f'Date: {data.get("timestamp", "N/A")}')
 
-            # === RESUME ===
+            # === RESUME AVEC DENIVELE ===
             summary = data.get('summary', {})
             track_info = summary.get('track_info', {})
             poi_search = summary.get('poi_search', {})
             poi_results = poi_search.get('results', {})
             performance = summary.get('performance', {})
 
+            total_ascent = track_info.get('total_ascent_m', 0)
+            total_descent = track_info.get('total_descent_m', 0)
+            min_elev = track_info.get('min_elevation_m', 'N/A')
+            max_elev = track_info.get('max_elevation_m', 'N/A')
+
             doc.add_heading('Résumé', level=1)
             doc.add_paragraph(f'Distance totale: {track_info.get("total_distance_km", 0)} km')
             doc.add_paragraph(f'Nombre de points: {track_info.get("total_points", 0)}')
+            doc.add_paragraph(f'Dénivelé positif: {total_ascent:.0f} m')
+            doc.add_paragraph(f'Dénivelé négatif: {total_descent:.0f} m')
+            doc.add_paragraph(f'Altitude min: {min_elev} m')
+            doc.add_paragraph(f'Altitude max: {max_elev} m')
             doc.add_paragraph(f'Total POI: {poi_results.get("total_found", 0)}')
             doc.add_paragraph(f'POI nommés: {poi_results.get("named_count", 0)}')
             doc.add_paragraph(f'POI non nommés: {poi_results.get("unnamed_count", 0)}')
@@ -86,7 +95,7 @@ class WordMapGenerator(BaseGenerator):
             if by_type:
                 doc.add_heading('Répartition par type', level=2)
                 for poi_type, count in by_type.items():
-                    doc.add_paragraph(f'{poi_type}: {count}', style='List Bullet')
+                    doc.add_paragraph(f'{poi_type.capitalize()}: {count}', style='List Bullet')
 
             # === CONFIGURATION ===
             doc.add_heading('Configuration', level=2)
@@ -142,7 +151,7 @@ class WordMapGenerator(BaseGenerator):
             return None
 
     def _create_map_image(self, data: Dict[str, Any], output_dir: Path) -> Optional[Path]:
-        """Crée une image de la carte avec Pillow"""
+        """Crée une image de la carte avec Pillow - Legende dynamique"""
         try:
             from PIL import Image, ImageDraw, ImageFont
 
@@ -209,7 +218,7 @@ class WordMapGenerator(BaseGenerator):
             def to_pixel(lat, lon):
                 x = margin + ((lon - lon_min) / lon_range) * img_width_margin
                 y = margin + ((lat_max - lat) / lat_range) * img_height_margin
-                return int(x), int(y)  # Conversion en int pour Pillow
+                return int(x), int(y)
 
             # === GRILLE ===
             grid_color = '#E8ECEF'
@@ -234,13 +243,12 @@ class WordMapGenerator(BaseGenerator):
             if len(track_pixels) > 1:
                 draw.line(track_pixels, fill='#2E86C1', width=3)
 
-                # Points de la trace (échantillonnage)
                 step = max(1, len(track_pixels) // 80)
                 for i in range(0, len(track_pixels), step):
                     x, y = track_pixels[i]
                     draw.ellipse([x-2, y-2, x+2, y+2], fill='#2E86C1')
 
-            # === POI ===
+            # === COULEURS DES POI ===
             poi_colors = {
                 'water': '#3498DB',
                 'refueling': '#E67E22',
@@ -249,13 +257,22 @@ class WordMapGenerator(BaseGenerator):
                 'bike-repair': '#E74C3C',
                 'pharmacy': '#1ABC9C'
             }
+            default_color = '#95A5A6'
 
-            # Police pour les numéros
+            # === COMPTER LES TYPES PRESENTS ===
+            types_presents = {}
+            for poi in pois:
+                poi_type = self._safe_str(poi, 'type', 'unknown')
+                if poi_type not in types_presents:
+                    types_presents[poi_type] = 0
+                types_presents[poi_type] += 1
+
             try:
                 font = ImageFont.truetype("arial.ttf", 10)
             except:
                 font = ImageFont.load_default()
 
+            # === DESSINER LES POI ===
             for idx, poi in enumerate(pois, 1):
                 lat = self._safe_float(poi, 'lat', 0.0)
                 lon = self._safe_float(poi, 'lon', 0.0)
@@ -264,7 +281,7 @@ class WordMapGenerator(BaseGenerator):
 
                 x, y = to_pixel(lat, lon)
                 poi_type = self._safe_str(poi, 'type', 'unknown')
-                color = poi_colors.get(poi_type, '#95A5A6')
+                color = poi_colors.get(poi_type, default_color)
                 name = self._safe_str(poi, 'name', '')
 
                 # Cercle du POI
@@ -273,9 +290,9 @@ class WordMapGenerator(BaseGenerator):
                 # Numéro
                 draw.text((x-4, y-5), str(idx), fill='white', font=font)
 
-                # Nom du POI
-                if name:
-                    draw.text((x+10, y-4), f"{idx}. {name[:15]}", fill='#2C3E50', font=font)
+                # # Nom du POI
+                # if name:
+                #     draw.text((x+10, y-4), f"{idx}. {name[:15]}", fill='#2C3E50', font=font)
 
             # === ECHELLE ===
             dist_km = max(lat_range, lon_range) * 111
@@ -284,33 +301,33 @@ class WordMapGenerator(BaseGenerator):
             sx, sy = margin + 20, img_height - margin - 20
             sw = min(60, img_width_margin * 0.12)
 
-            # Tous les paramètres sont des entiers pour Pillow
             draw.line([(sx, sy), (sx + int(sw), sy)], fill='#2C3E50', width=2)
             draw.line([(sx, sy-4), (sx, sy+4)], fill='#2C3E50', width=2)
             draw.line([(sx + int(sw), sy-4), (sx + int(sw), sy+4)], fill='#2C3E50', width=2)
             draw.text((sx + int(sw)//2 - 10, sy-18), f"{dist_km} km", fill='#2C3E50', font=font)
 
-            # === LEGENDE ===
-            lx = img_width - 160
-            ly = margin + 10
-            legend_height = 20 + len(poi_colors) * 20 + 10
+            # === LEGENDE - UNIQUEMENT LES TYPES PRESENTS ===
+            if types_presents:
+                lx = img_width - 160
+                ly = margin + 10
+                legend_height = 20 + len(types_presents) * 20 + 10
 
-            # Fond de la légende
-            draw.rectangle(
-                [lx, ly, lx + 130, ly + legend_height],
-                fill='white',
-                outline='#DDDDDD'
-            )
+                draw.rectangle(
+                    [lx, ly, lx + 130, ly + legend_height],
+                    fill='white',
+                    outline='#DDDDDD'
+                )
 
-            draw.text((lx + 8, ly + 5), "Légende", fill='#2C3E50', font=font)
+                draw.text((lx + 8, ly + 5), "Légende", fill='#2C3E50', font=font)
 
-            for j, (typ, col) in enumerate(poi_colors.items()):
-                y2 = ly + 22 + j * 18
-                draw.rectangle([lx + 8, y2, lx + 18, y2 + 10], fill=col)
-                draw.text((lx + 24, y2 - 1), typ, fill='#2C3E50', font=font)
+                for j, (poi_type, count) in enumerate(types_presents.items()):
+                    y2 = ly + 22 + j * 18
+                    color = poi_colors.get(poi_type, default_color)
+                    draw.rectangle([lx + 8, y2, lx + 18, y2 + 10], fill=color)
+                    draw.text((lx + 24, y2 - 1), f"{poi_type.capitalize()} ({count})", fill='#2C3E50', font=font)
 
             # === SAUVEGARDE ===
-            img_path = output_dir / f'map_{data.get("analysis_id", "unknown")}.png'
+            img_path = output_dir / f'docx_map_{data.get("analysis_id", "unknown")}.png'
             img.save(str(img_path), 'PNG', dpi=(150, 150))
             logger.info(f"Image de la carte générée: {img_path}")
 

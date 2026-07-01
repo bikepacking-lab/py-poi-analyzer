@@ -201,9 +201,16 @@ class TrackAnalyzer:
         if saved_file:
             file_info['saved_to'] = str(saved_file)
         
-        # Track info
+        elevation_stats = gpx_processor.get_elevation_stats()
+
         track_info = {
             'total_distance_km': round(total_distance, 2),
+            'has_elevation': any(p.get('elevation') is not None for p in gpx_processor.track_points[:100]),
+            'has_time': any(p.get('time') is not None for p in gpx_processor.track_points[:100]),
+            'min_elevation_m': elevation_stats.get('min_elevation_m'),
+            'max_elevation_m': elevation_stats.get('max_elevation_m'),
+            'total_ascent_m': elevation_stats.get('total_ascent_m', 0),
+            'total_descent_m': elevation_stats.get('total_descent_m', 0),
             **StatsManager.build_track_info(gpx_processor.track_points)
         }
         

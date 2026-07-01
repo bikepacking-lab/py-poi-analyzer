@@ -25,14 +25,13 @@ class CSVGenerator(BaseGenerator):
                     writer.writerow(['ID', 'Type', 'Nom', 'Latitude', 'Longitude', 'Distance (km)'])
                     writer.writerow(['Aucun POI trouve', '', '', '', '', ''])
                 else:
-                    # TOUS les POI - AUCUNE LIMITE
                     fieldnames = [
                         'ID', 'Type', 'Nom', 'Latitude', 'Longitude', 
                         'Distance (km)', 'Adresse', 'Telephone', 'Site web',
                         'Horaires', 'Description', 'Google Maps', 'Overpass'
                     ]
                     
-                    writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+                    writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     writer.writeheader()
                     
                     for poi in pois:

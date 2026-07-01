@@ -7,6 +7,13 @@ from pathlib import Path
 import logging
 import math
 
+from config import (
+    ELEVATION_MIN_VARIATION,
+    ELEVATION_SMOOTHING_WINDOW,
+    ELEVATION_SUBSAMPLE_STEP,
+    ELEVATION_SUBSAMPLE_THRESHOLD
+)
+
 logger = logging.getLogger(__name__)
 
 class GPXProcessor:
@@ -16,6 +23,10 @@ class GPXProcessor:
         self.gpx = None
         self.file_path = None
         self.track_points = []
+        self.total_ascent = 0.0
+        self.total_descent = 0.0
+        self.min_elevation = None
+        self.max_elevation = None
     
     def load_gpx(self, file_path: Path) -> bool:
         """Charge un fichier GPX"""
@@ -24,7 +35,13 @@ class GPXProcessor:
                 self.gpx = gpxpy.parse(f)
             self.file_path = file_path
             self.track_points = self._extract_track_points()
+            self._calculate_elevation_stats()
             logger.info(f"GPX charge: {file_path}, {len(self.track_points)} points")
+            
+            elevation = self.get_elevation_stats()
+            if elevation.get('total_ascent_m', 0) > 0:
+                logger.info(f"Denivele: +{elevation['total_ascent_m']:.0f}m / -{elevation['total_descent_m']:.0f}m")
+                logger.info(f"  (seuil={ELEVATION_MIN_VARIATION}m, lissage={ELEVATION_SMOOTHING_WINDOW}pts, subsample={ELEVATION_SUBSAMPLE_STEP})")
             return True
         except Exception as e:
             logger.error(f"Erreur chargement GPX: {e}")
@@ -48,6 +65,89 @@ class GPXProcessor:
                     })
         return points
     
+    def _calculate_elevation_stats(self):
+        """
+        Calcule les statistiques d'elevation avec les parametres config
+        Correspond a visugpx : seuil=10m, lissage=5pts, subsample=1/3
+        """
+        elevations = []
+        for point in self.track_points:
+            if point.get('elevation') is not None:
+                elevations.append(point['elevation'])
+        
+        if not elevations:
+            self.min_elevation = None
+            self.max_elevation = None
+            self.total_ascent = 0.0
+            self.total_descent = 0.0
+            return
+        
+        self.min_elevation = min(elevations)
+        self.max_elevation = max(elevations)
+        
+        # === 1. SOUS-ECHANTILLONNAGE (1 point sur 3) ===
+        # Visugpx fait cela pour les longues traces
+        if len(self.track_points) > ELEVATION_SUBSAMPLE_THRESHOLD:
+            step = ELEVATION_SUBSAMPLE_STEP
+            points = self.track_points[::step]
+            logger.debug(f"Sous-echantillonnage: {len(self.track_points)} -> {len(points)} points (step={step})")
+        else:
+            points = self.track_points
+        
+        # === 2. LISSAGE SUR 5 POINTS ===
+        window_size = ELEVATION_SMOOTHING_WINDOW
+        half_window = window_size // 2
+        smoothed = []
+        
+        for i in range(len(points)):
+            if points[i].get('elevation') is None:
+                smoothed.append(None)
+                continue
+            
+            window = []
+            for j in range(max(0, i - half_window), min(len(points), i + half_window + 1)):
+                if points[j].get('elevation') is not None:
+                    window.append(points[j]['elevation'])
+            
+            if window:
+                smoothed.append(sum(window) / len(window))
+            else:
+                smoothed.append(None)
+        
+        # === 3. SEUIL MINIMUM ===
+        min_variation = ELEVATION_MIN_VARIATION
+        
+        self.total_ascent = 0.0
+        self.total_descent = 0.0
+        
+        for i in range(1, len(smoothed)):
+            if smoothed[i] is None or smoothed[i-1] is None:
+                continue
+            
+            diff = smoothed[i] - smoothed[i-1]
+            
+            # Ignorer les variations inferieures au seuil
+            if abs(diff) < min_variation:
+                continue
+                
+            if diff > 0:
+                self.total_ascent += diff
+            else:
+                self.total_descent += abs(diff)
+        
+        # Arrondir a l'entier
+        self.total_ascent = round(self.total_ascent, 0)
+        self.total_descent = round(self.total_descent, 0)
+    
+    def get_elevation_stats(self) -> Dict[str, Any]:
+        """Retourne les statistiques d'elevation"""
+        return {
+            'min_elevation_m': self.min_elevation,
+            'max_elevation_m': self.max_elevation,
+            'total_ascent_m': self.total_ascent,
+            'total_descent_m': self.total_descent
+        }
+        
     def calculate_distances(self) -> List[float]:
         """Calcule les distances entre les points"""
         if len(self.track_points) < 2:

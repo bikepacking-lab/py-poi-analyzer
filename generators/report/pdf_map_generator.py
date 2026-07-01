@@ -260,19 +260,19 @@ class PDFMapGenerator(BaseGenerator):
             num_str.textAnchor = 'middle'
             drawing.add(num_str)
             
-            # Petite ligne de connexion pour le nom
-            if poi_name:
-                # Fond blanc pour le texte
-                name_str = String(x + 10, y + 2, f"{idx}. {poi_name[:20]}")
-                name_str.fontName = 'Helvetica'
-                name_str.fontSize = 7
-                name_str.fillColor = colors.HexColor('#2C3E50')
+            # # Petite ligne de connexion pour le nom
+            # if poi_name:
+            #     # Fond blanc pour le texte
+            #     name_str = String(x + 10, y + 2, f"{idx}. {poi_name[:20]}")
+            #     name_str.fontName = 'Helvetica'
+            #     name_str.fontSize = 7
+            #     name_str.fillColor = colors.HexColor('#2C3E50')
                 
-                # S'assurer que le texte reste dans la carte
-                if x + 10 + len(poi_name[:20]) * 4 > map_width - margin:
-                    # Texte à gauche
-                    name_str.x = x - 10 - len(poi_name[:20]) * 4
-                drawing.add(name_str)
+            #     # S'assurer que le texte reste dans la carte
+            #     if x + 10 + len(poi_name[:20]) * 4 > map_width - margin:
+            #         # Texte à gauche
+            #         name_str.x = x - 10 - len(poi_name[:20]) * 4
+            #     drawing.add(name_str)
         
         # === 4. ÉCHELLE ===
         # Calcul de l'échelle approximative

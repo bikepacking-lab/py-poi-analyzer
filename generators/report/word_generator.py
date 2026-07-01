@@ -50,7 +50,6 @@ class WordGenerator(BaseGenerator):
             doc.add_paragraph(f'Temps recherche POI: {performance.get("search_duration_seconds", 0):.1f} secondes')
             doc.add_paragraph(f'Temps calcul distances: {performance.get("distance_calculation_seconds", 0):.1f} secondes')
             
-            # TOUS les POI - AUCUNE LIMITE
             doc.add_heading('Liste complete des POI', level=1)
             
             pois = data.get('pois', [])
@@ -72,7 +71,6 @@ class WordGenerator(BaseGenerator):
                     cell.text = header
                     cell.paragraphs[0].runs[0].bold = True
                 
-                # TOUS les POI - AUCUNE LIMITE
                 for i, poi in enumerate(pois, 1):
                     row_cells = table.add_row().cells
                     row_cells[0].text = str(i)

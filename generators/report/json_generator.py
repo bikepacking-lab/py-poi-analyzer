@@ -38,6 +38,14 @@ class JSONGenerator(BaseGenerator):
                     'points_count': len(data.get('track_points', [])),
                     'bounds': self._get_bounds(data.get('track_points', []))
                 },
+                'track_info': {
+                    'total_distance_km': data.get('track_info', {}).get('total_distance_km'),
+                    'total_points': data.get('track_info', {}).get('total_points'),
+                    'min_elevation_m': data.get('track_info', {}).get('min_elevation_m'),
+                    'max_elevation_m': data.get('track_info', {}).get('max_elevation_m'),
+                    'total_ascent_m': data.get('track_info', {}).get('total_ascent_m'),
+                    'total_descent_m': data.get('track_info', {}).get('total_descent_m')
+                },
                 'configuration': {
                     'radii': data.get('radii', {}),
                     'intervals': data.get('intervals', {})
@@ -54,7 +62,7 @@ class JSONGenerator(BaseGenerator):
             return None
     
     def _format_pois(self, pois: List) -> List[Dict]:
-        """Formate TOUS les POI - AUCUNE LIMITE"""
+        """Formate TOUS les POI"""
         if not pois:
             return []
     
