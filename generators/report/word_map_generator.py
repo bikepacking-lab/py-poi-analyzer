@@ -82,6 +82,10 @@ class WordMapGenerator(BaseGenerator):
             if map_image and map_image.exists():
                 try:
                     doc.add_page_break()
+                    doc.add_paragraph('')
+                    doc.add_paragraph('')
+                    doc.add_paragraph('')
+                    doc.add_paragraph('')
                     doc.add_picture(str(map_image), width=Inches(6.5))
                     doc.add_paragraph('')
                     logger.info(f"Carte ajoutée au document: {map_image}")

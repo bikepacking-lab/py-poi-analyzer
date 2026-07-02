@@ -249,8 +249,8 @@ AVAILABLE_POI_TAGS_OSM["new-poi"] = [
 ## Support
 
 * Pour toute question ou problème : support@bikepacking-analyzer.com
-* Ouvrir une issue sur GitHub : [github.com/bikepacking-lab/py-poi-analyzer](https://github.com/bikepacking-lab/py-poi-analyzer)
 * Contacter l'équipe de développement : lab@bikepacking-analyzer.com
+* Ouvrir une issue sur GitHub : [github.com/bikepacking-lab/py-poi-analyzer](https://github.com/bikepacking-lab/py-poi-analyzer)
 
 ## Licence
 
@@ -272,7 +272,9 @@ Créer une Pull Request
 
 ## Remerciements
 
-Outil de conversion JSON Date vert Fromat FIT :[ github.com/dapperdal/technogym_json_to_fit](https://github.com/dapperdal/technogym_json_to_fit)
+Outil de conversion en ligne JSON Data vers Format FIT :[ github.com/dapperdal/technogym_json_to_fit](https://github.com/dapperdal/technogym_json_to_fit)
+
+Librairie de convertion JSON Data vers Format Fit [github.com/dapperdal/technogym_json_to_fit](https://github.com/dapperdal/technogym_json_to_fit)
 
 Overpass API Recherche POI : [openstreetmap.org](https://openstreetmap.org/)
 
