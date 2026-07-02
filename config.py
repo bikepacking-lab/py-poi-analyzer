@@ -21,10 +21,10 @@ MAX_GPX_DISTANCE_KM = 250.0
 # CHUNK_DISTANCE_KM = 15.0
 GPX_AUTO_SPLIT = True
 # Configuration de l'élévation (dénivelé)
-ELEVATION_MIN_VARIATION = 10.0
-ELEVATION_SMOOTHING_WINDOW = 5
-ELEVATION_SUBSAMPLE_STEP = 3
-ELEVATION_SUBSAMPLE_THRESHOLD = 1000
+ELEVATION_MIN_VARIATION = 1.0
+ELEVATION_SMOOTHING_WINDOW = 3
+ELEVATION_SUBSAMPLE_STEP = 2
+ELEVATION_SUBSAMPLE_THRESHOLD = 30000
 
 # Configuration de l'analyse
 ANALYSIS_MAX_PARALLEL = 2
@@ -66,7 +66,8 @@ DEFAULT_INTERVALS = {
     "pharmacy": 40.0
 }
 
-DEFAULT_REPORT_FORMATS = ["json", "csv", "xlsx", "docx", "pdf", "pdf-map", "docx-map", "gdocs", "gdocs-map","fit-data"]
+DEFAULT_REPORT_FORMATS = ["json", "csv", "xlsx", "docx", "pdf", "pdf-map", "docx-map", "gdocs", "gdocs-map","fit-enriched","kml-enriched","tcx-enriched", "gpx-enriched", "tcx", "kml", "fit"]
+
 AVAILABLE_REPORT_FORMATS = [
     {"type": "json", "label": "Format JSON Summary Data"},
     {"type": "csv", "label": "Report Format CSV"},
@@ -80,7 +81,11 @@ AVAILABLE_REPORT_FORMATS = [
     {"type": "gpx-enriched", "label": "Format GPX Enrichi POI"},
     {"type": "kml-enriched", "label": "Format KML Enrichi POI"},
     {"type": "tcx-enriched", "label": "Format TCX Enrichi POI"},
-    {"type": "fit-data", "label": "Données FIT Enrichi POI (JSON Data + Outils conversion FIT)"}
+    {"type": "fit-enriched", "label": "Données FIT Enrichi POI (JSON Data + Outils conversion FIT)"},
+    {"type": "gpx", "label": "Conversion au Format GPX"},
+    {"type": "kml", "label": "Conversion au Format KML"},
+    {"type": "tcx", "label": "Conversion au Format TCX"},
+    {"type": "fit", "label": "Conversion au Format FIT (JSON Data + Outils conversion FIT)"}
 ]
 
 DEFAULT_POI_TYPES = ["water", "refueling", "bivouac"]

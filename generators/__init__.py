@@ -1,36 +1,52 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from .base_generator import BaseGenerator, GeneratorRegistry
+from .base_generator import GeneratorRegistry
 
 def register_all_generators():
+    # Rapports
     from .report.json_generator import JSONGenerator
     from .report.csv_generator import CSVGenerator
     from .report.excel_generator import ExcelGenerator
     from .report.word_generator import WordGenerator
     from .report.word_map_generator import WordMapGenerator
-    from .report.pdf_generator import PDFGenerator
-    from .report.pdf_map_generator import PDFMapGenerator
     from .report.gdocs_generator import GDocsGenerator
     from .report.gdocs_map_generator import GDocsMapGenerator
+    from .report.pdf_generator import PDFGenerator
+    from .report.pdf_map_generator import PDFMapGenerator
+    
+    # Enrichis
+    from .enriched.gpx_generator import GPXGenerator as GPXEnrichedGenerator
+    from .enriched.kml_generator import KMLGenerator as KMLEnrichedGenerator
+    from .enriched.tcx_generator import TCXGenerator as TCXEnrichedGenerator
+    from .enriched.fit_generator import FITGenerator as FITEnrichedGenerator
+    
+    # Conversions
+    from .converters.gpx_converter import GPXConverter
+    from .converters.kml_converter import KMLConverter
+    from .converters.tcx_converter import TCXConverter
+    from .converters.fit_converter import FITConverter
 
-    from .enriched.gpx_generator import GPXGenerator
-    from .enriched.kml_generator import KMLGenerator
-    from .enriched.tcx_generator import TCXGenerator
-    from .enriched.fit_generator import FITGenerator
-
+    # Rapports
     GeneratorRegistry.register('json', JSONGenerator)
     GeneratorRegistry.register('csv', CSVGenerator)
     GeneratorRegistry.register('xlsx', ExcelGenerator)
     GeneratorRegistry.register('docx', WordGenerator)
     GeneratorRegistry.register('docx-map', WordMapGenerator)
-    GeneratorRegistry.register('pdf', PDFGenerator)
-    GeneratorRegistry.register('pdf-map', PDFMapGenerator)
     GeneratorRegistry.register('gdocs', GDocsGenerator)
     GeneratorRegistry.register('gdocs-map', GDocsMapGenerator)
-
-    GeneratorRegistry.register('gpx-enriched', GPXGenerator)
-    GeneratorRegistry.register('kml-enriched', KMLGenerator)
-    GeneratorRegistry.register('tcx-enriched', TCXGenerator)
-    GeneratorRegistry.register('fit-data', FITGenerator)
+    GeneratorRegistry.register('pdf', PDFGenerator)
+    GeneratorRegistry.register('pdf-map', PDFMapGenerator)
+    
+    # Enrichis
+    GeneratorRegistry.register('gpx-enriched', GPXEnrichedGenerator)
+    GeneratorRegistry.register('kml-enriched', KMLEnrichedGenerator)
+    GeneratorRegistry.register('tcx-enriched', TCXEnrichedGenerator)
+    GeneratorRegistry.register('fit-enriched', FITEnrichedGenerator)
+    
+    # Conversions
+    GeneratorRegistry.register('gpx', GPXConverter)
+    GeneratorRegistry.register('kml', KMLConverter)
+    GeneratorRegistry.register('tcx', TCXConverter)
+    GeneratorRegistry.register('fit', FITConverter)
 
 register_all_generators()

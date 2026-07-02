@@ -23,6 +23,14 @@ GPS Trace Analyzer est un outil modulaire d'analyse de traces GPS permettant :
 - L'enrichissement de fichiers GPS
 - La gestion de traces volumineuses avec split automatique
 
+Les formats acceptés en entrée d'analyse : GPX, TCX, FIT, KML.
+
+Génération des raports d'analyse (PDF, DOCX, PDF + MAP/POI, etc.).
+
+Conversion vers tous les formats en entrée.
+
+Génération des formats enrichis des POI trouvés par l'analyse.
+
 ## Architecture
 
 ### Design Patterns utilisés
@@ -210,8 +218,6 @@ AVAILABLE_POI_TAGS_OSM["new-poi"] = [
 3. Acceptez les permissions
 4. Le token est sauvegarde dans `credentials/token_gdocs.json`
 
-
-
 ## Liste des rapports disponibles
 
 ### Rapports d'analyse
@@ -231,7 +237,14 @@ AVAILABLE_POI_TAGS_OSM["new-poi"] = [
 * GPX Enrichis des POI
 * KML Enrichis des POI
 * TCX Enrichis des POI
-* FIT Enrichis des POI (Format JSON + Outil Conversion Format FIT)
+* FIT Enrichis des POI (Format JSON + Outil Conversion Format FIT : [www.vertopal.com/en/convert/json-to-fit](https://www.vertopal.com/en/convert/json-to-fit))
+
+## Conversions
+
+* Format GPX
+* Format KML
+* Format TCX
+* Format FIT (Format JSON + Outil Conversion Format FIT : [www.vertopal.com/en/convert/json-to-fit](https://www.vertopal.com/en/convert/json-to-fit))
 
 ## Support
 
@@ -270,3 +283,7 @@ Overpass API Recherche POI : [openstreetmap.org](https://openstreetmap.org/)
 - Support FIT : Génération de données FIT (au format JSON pour l'instant, prêt pour fitdecode)
 - Documentation complète : Markdown détaillé avec sections pour les utilisateurs et les développeurs
 - Extensibilité : Facile d'ajouter de nouveaux POI, formats, ou fonctionnalités
+
+## Corrections en priorité
+
+* Conversion JSON Data vers FIT Binary

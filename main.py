@@ -10,7 +10,7 @@ import argparse
 import logging
 from pathlib import Path
 from datetime import datetime
-from config import BASE_DIR
+from config import LOG_DIR
 from analyzers.track_analyzer import TrackAnalyzer
 
 # Configuration pour l'encodage UTF-8 sur Windows
@@ -18,9 +18,10 @@ if sys.platform == 'win32':
     import codecs
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
-
-LOG_DIR = BASE_DIR / 'logs'
-LOG_DIR.mkdir(exist_ok=True)
+else:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+    
 
 # Configuration du logging avec encodage UTF-8
 logging.basicConfig(
