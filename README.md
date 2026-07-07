@@ -22,6 +22,7 @@ GPS Trace Analyzer est un outil modulaire d'analyse de traces GPS permettant :
 - La génération de rapports multi-formats
 - L'enrichissement de fichiers GPS
 - La gestion de traces volumineuses avec split automatique
+- Calcule estimation du temps d'activité par jour.
 
 Les formats acceptés en entrée d'analyse : GPX, TCX, FIT, KML.
 
@@ -247,6 +248,39 @@ AVAILABLE_POI_TAGS_OSM["new-poi"] = [
 * Format KML
 * Format TCX
 * Format FIT (Format JSON + Outil Conversion Format FIT : [www.vertopal.com/en/convert/json-to-fit](https://www.vertopal.com/en/convert/json-to-fit))
+
+## Liste des activités
+
+Permet de calculer une estimation du temps nécessaire pour réaliser la trace selon l'activité.
+
+Possibilité de personnaliser à ses propres besoins et conditions personnelles
+
+```Python
+# Configuration des types de pratique disponibles pour l'analyse de vitesse et de temps
+# Vitesses moyennes par type de pratique (km/h)
+# Note: Ces valeurs sont des estimations et peuvent varier selon le terrain, la condition physique, la météo, etc.
+# N'hésitez pas à ajuster ces valeurs selon vos besoins et votre expérience personnelle.
+DEFAULT_SPEEDS = {
+    'cycling': 20.0,
+    'mtb': 12.0, 
+    'gravel': 16.0,
+    'hiking': 4.5, 
+    'running': 8.0, 
+    'walking': 3.5,
+    'default': 15.0 
+}
+
+# Durée de la journée par type de pratique (heures par jour)
+DEFAULT_DAY_DURATION_HOURS = {
+    'cycling': 8.0,
+    'mtb': 8.0,
+    'gravel': 8.0,
+    'hiking': 8.0,
+    'running': 8.0,
+    'walking': 8.0,
+    'default': 8.0
+}
+```
 
 ## Support
 
