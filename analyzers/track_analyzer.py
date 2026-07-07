@@ -7,14 +7,15 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import json
 import time
-import math
+from core.time_estimator import TimeEstimator
 
 from config import (
     MAX_GPX_DISTANCE_KM, ANALYSIS_MAX_PARALLEL,
     REPORT_DIR, DEFAULT_POI_TYPES, DEFAULT_RADII,
     DEFAULT_INTERVALS, DEFAULT_REPORT_FORMATS,
     DEFAULT_POI_TAGS_OSM, MAX_TAGS_PER_TYPE, 
-    GPX_DIR
+    GPX_DIR,
+    DEFAULT_ACTIVITY_TYPE, DEFAULT_BREAKS_PER_HOUR
 )
 from core.gpx_processor import GPXProcessor
 from core.poi_detector import POIDetector
@@ -39,12 +40,22 @@ class TrackAnalyzer:
         self.analysis_dir = REPORT_DIR
         self.start_time = 0.0
         self.converted_gpx = None
+
+    def _has_valid_report(self, reports: Dict[str, Any], report_key: str) -> bool:
+        """Vérifie qu'un rapport a bien été généré et contient une valeur exploitable."""
+        report_value = reports.get(report_key)
+        if report_value is None:
+            return False
+        if isinstance(report_value, list):
+            return len(report_value) >= 2
+        return bool(report_value)
     
     def analyze(self, input_file: Path, 
                poi_types: Optional[List[str]] = None,
                radii: Optional[Dict[str, float]] = None,
                intervals: Optional[Dict[str, float]] = None,
-               report_formats: Optional[List[str]] = None) -> Dict[str, Any]:
+               report_formats: Optional[List[str]] = None,
+               activity: str = 'gravel') -> Dict[str, Any]:
         """Point d'entree principal pour l'analyse"""
         
         # Initialisation
@@ -147,6 +158,17 @@ class TrackAnalyzer:
         # 8. Statistiques
         poi_stats = StatsManager.get_safe_poi_stats(pois, self.poi_detector)
         
+        # Récupérer les stats d'élévation
+        elevation_stats = gpx_processor.get_elevation_stats()
+        total_ascent = elevation_stats.get('total_ascent_m', 0)
+
+        time_estimate = TimeEstimator.estimate_time(
+            distance_km=total_distance,
+            total_ascent_m=total_ascent,
+            activity_type=activity,
+            breaks_per_hour=DEFAULT_BREAKS_PER_HOUR
+        )
+        
         # 9. Construction du resume
         stats = self._build_summary(
             input_file, saved_file, gpx_processor, total_distance,
@@ -154,6 +176,7 @@ class TrackAnalyzer:
             unique_bboxes, bboxes_by_type, poi_stats, search_duration, dist_duration,
             poi_types, radii, intervals, conversion_info
         )
+        stats['time_estimate'] = time_estimate
         
         # 10. Generation des rapports
         report_formats = report_formats if report_formats else DEFAULT_REPORT_FORMATS
@@ -184,11 +207,11 @@ class TrackAnalyzer:
         fit_converted_error = None
         
         if 'fit-enriched' in report_formats:
-            if 'fit-enriched' not in reports or not reports.get('fit-enriched') or (isinstance(reports.get('fit-enriched'), list) and len(reports.get('fit-enriched')) < 2):
+            if not self._has_valid_report(reports, 'fit-enriched'):
                 fit_enriched_error = "FIT generation failed. You can convert JSON to FIT at https://www.vertopal.com/en/convert/json-to-fit."
         
         if 'fit' in report_formats:
-            if 'fit' not in reports or not reports.get('fit') or (isinstance(reports.get('fit'), list) and len(reports.get('fit')) < 2):
+            if not self._has_valid_report(reports, 'fit'):
                 fit_converted_error = "FIT generation failed. You can convert JSON to FIT at https://www.vertopal.com/en/convert/json-to-fit."
         
         # 14. Resultats
@@ -273,12 +296,20 @@ class TrackAnalyzer:
         # Recommendations
         recommendations = RecommendationManager.generate(poi_stats, poi_types, radii)
         
+        time_estimate = TimeEstimator.estimate_time(
+            distance_km=total_distance,
+            total_ascent_m=track_info.get('total_ascent_m', 0),
+            activity_type=DEFAULT_ACTIVITY_TYPE,
+            breaks_per_hour=DEFAULT_BREAKS_PER_HOUR
+        )
+        
         return {
             'conversion_info': conversion_info,
             'file_info': file_info,
             'track_info': track_info,
             'split_info': split_info,
             'poi_search': poi_search,
+            'time_estimate': time_estimate,
             'recommendations': recommendations
         }
     
@@ -317,12 +348,22 @@ class TrackAnalyzer:
                     if file_path:
                         # Si le generateur retourne une liste (fit_converter)
                         if isinstance(file_path, list):
+                            existing_files = []
                             for f in file_path:
-                                if f:
-                                    reports[fmt] = ','.join(str(p) for p in file_path)
+                                if f and Path(f).exists():
+                                    existing_files.append(str(f))
+                            if existing_files:
+                                reports[fmt] = ','.join(existing_files)
+                                logger.info(f"Rapport {fmt} genere: {len(existing_files)} fichier(s)")
+                            else:
+                                logger.warning(f"Rapport {fmt}: aucun fichier genere")
                         else:
-                            reports[fmt] = str(file_path)
-                        logger.info(f"Rapport {fmt} genere")
+                            if Path(file_path).exists():
+                                reports[fmt] = str(file_path)
+                                logger.info(f"Rapport {fmt} genere: {file_path}")
+                            else:
+                                logger.warning(f"Rapport {fmt} non genere (fichier introuvable): {file_path}")
+                        # logger.info(f"Rapport {fmt} genere")
                     else:
                         logger.warning(f"Rapport {fmt} non genere (retour None)")
                 except Exception as e:

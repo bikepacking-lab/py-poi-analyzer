@@ -35,8 +35,8 @@ class WordGenerator(BaseGenerator):
             track_info = summary.get('track_info', {})
             poi_search = summary.get('poi_search', {})
             poi_results = poi_search.get('results', {})
-            
             performance = summary.get('performance', {})
+            time_est = summary.get('time_estimate', {})
 
             doc.add_heading('Resume', level=1)
             doc.add_paragraph(f'Distance totale: {track_info.get("total_distance_km", 0)} km')
@@ -49,6 +49,13 @@ class WordGenerator(BaseGenerator):
             doc.add_paragraph(f'Temps total: {performance.get("total_duration_seconds", 0):.1f} secondes')
             doc.add_paragraph(f'Temps recherche POI: {performance.get("search_duration_seconds", 0):.1f} secondes')
             doc.add_paragraph(f'Temps calcul distances: {performance.get("distance_calculation_seconds", 0):.1f} secondes')
+            
+            doc.add_heading('Estimation de temps', level=3)
+            doc.add_paragraph(f'Temps estime: {time_est.get("formatted_moving", "N/A")} h')
+            doc.add_paragraph(f'Avec pauses: {time_est.get("formatted_total", "N/A")} h')
+            doc.add_paragraph(f'Temps estime (humain): {time_est.get("formatted_moving_human", "N/A")} h')
+            doc.add_paragraph(f'Avec pauses (humain): {time_est.get("formatted_total_human", "N/A")} h')
+            doc.add_paragraph(f'Vitesse moyenne: {time_est.get("average_speed_kmh", "N/A")} km/h')
             
             doc.add_heading('Liste complete des POI', level=1)
             

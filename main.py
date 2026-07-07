@@ -24,13 +24,18 @@ else:
     
 
 # Configuration du logging avec encodage UTF-8
+
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(filename)s:%(name)s:%(lineno)s - %(funcName)s() - %(message)s',
     handlers=[
         logging.FileHandler(LOG_DIR / f'analyzer-{datetime.now().strftime("%Y%m%d")}.log', encoding='utf-8'),
         logging.StreamHandler(sys.stdout)
-    ]
+    ],
+    force=True
 )
 
 logger = logging.getLogger(__name__)
@@ -43,6 +48,8 @@ def main():
     parser.add_argument('--report-formats', nargs='+', default=None,
                        help='Formats de rapport (json, csv, xlsx, docx, pdf, pdf-map, gpx-enriched, kml-enriched, tcx-enriched, fit-data)')
     parser.add_argument('--debug', action='store_true', help='Mode debug')
+    parser.add_argument('--activity', type=str, default='gravel', choices=['cycling', 'mtb', 'gravel', 'hiking', 'running', 'walking'],
+                       help='Type d\'activite (cycling, mtb, gravel, hiking, running, walking)')
     
     args = parser.parse_args()
     
@@ -55,11 +62,15 @@ def main():
     
     analyzer = TrackAnalyzer()
     
+    logger.info(f"Types POI: {args.poi_types}")
+    logger.info(f"Formats: {args.report_formats}")
+    logger.info(f"Activite: {args.activity}")
     try:
         results = analyzer.analyze(
             args.file,
             poi_types=args.poi_types,
-            report_formats=args.report_formats
+            report_formats=args.report_formats,
+            activity=args.activity
         )
         
         if results is None:

@@ -51,7 +51,8 @@ class WordMapGenerator(BaseGenerator):
             poi_search = summary.get('poi_search', {})
             poi_results = poi_search.get('results', {})
             performance = summary.get('performance', {})
-
+            time_est = summary.get('time_estimate', {})
+            
             total_ascent = track_info.get('total_ascent_m', 0)
             total_descent = track_info.get('total_descent_m', 0)
             min_elev = track_info.get('min_elevation_m', 'N/A')
@@ -72,11 +73,18 @@ class WordMapGenerator(BaseGenerator):
             doc.add_paragraph(f'Temps total: {performance.get("total_duration_seconds", 0):.1f} secondes')
             doc.add_paragraph(f'Temps recherche POI: {performance.get("search_duration_seconds", 0):.1f} secondes')
 
+            doc.add_heading('Estimation de temps', level=3)
+            doc.add_paragraph(f'Temps estimé: {time_est.get("formatted_moving", "N/A")} h')
+            doc.add_paragraph(f'Avec pauses: {time_est.get("formatted_total", "N/A")} h')
+            doc.add_paragraph(f'Temps estime (humain): {time_est.get("formatted_moving_human", "N/A")} h')
+            doc.add_paragraph(f'Avec pauses (humain): {time_est.get("formatted_total_human", "N/A")} h')
+            doc.add_paragraph(f'Vitesse moyenne: {time_est.get("average_speed_kmh", "N/A")} km/h')
+            
             # === CARTE ===
             doc.add_heading('Carte des POI', level=1)
             doc.add_paragraph('Bleu=Trace | Couleurs=POI par type')
 
-            # Générer l'image de la carte avec Pillow
+            # Générer l'image de la carte
             map_image = self._create_map_image(data, output_dir)
 
             if map_image and map_image.exists():

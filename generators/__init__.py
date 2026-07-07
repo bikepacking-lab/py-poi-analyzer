@@ -4,15 +4,15 @@ from .base_generator import GeneratorRegistry
 
 def register_all_generators():
     # Rapports
-    from .report.json_generator import JSONGenerator
-    from .report.csv_generator import CSVGenerator
-    from .report.excel_generator import ExcelGenerator
-    from .report.word_generator import WordGenerator
-    from .report.word_map_generator import WordMapGenerator
-    from .report.gdocs_generator import GDocsGenerator
-    from .report.gdocs_map_generator import GDocsMapGenerator
-    from .report.pdf_generator import PDFGenerator
-    from .report.pdf_map_generator import PDFMapGenerator
+    from .reporters.json_generator import JSONGenerator
+    from .reporters.csv_generator import CSVGenerator
+    from .reporters.excel_generator import ExcelGenerator
+    from .reporters.word_generator import WordGenerator
+    from .reporters.word_map_generator import WordMapGenerator
+    from .reporters.gdocs_generator import GDocsGenerator
+    from .reporters.gdocs_map_generator import GDocsMapGenerator
+    from .reporters.pdf_generator import PDFGenerator
+    from .reporters.pdf_map_generator import PDFMapGenerator
     
     # Enrichis
     from .enriched.gpx_generator import GPXGenerator as GPXEnrichedGenerator

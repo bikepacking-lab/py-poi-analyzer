@@ -47,20 +47,22 @@ Génération des formats enrichis des POI trouvés par l'analyse.
 
 gps_analyzer/
 ├── core/ # Fonctionnalités cœur
-│ ├── gpx_processor.py # Traitement GPX
-│ ├── poi_detector.py # Détection POI
-│ ├── cache_manager.py # Gestion du cache
-│ └── file_converter.py # Conversion formats
+│ ├── gpx_processor.py 	# Traitement GPX
+│ ├── poi_detector.py 	# Détection POI
+│ ├── cache_manager.py 	# Gestion du cache
+│ ├── file_converter.py # Conversion formats
+│ └── time_estimator.py # Estimation du temps
 ├── analyzers/ # Analyseurs
 │ └── track_analyzer.py # Analyseur principal
 ├── generators/ # Générateurs (Strategy Pattern)
 │ ├── base_generator.py # Classe de base
-│ ├── report/ # Rapports
-│ └── enriched/ # Fichiers enrichis
+│ ├── converters/ 	# Convertisseurs
+│ ├── reporters/ 	# Rapports
+│ └── enriched/ 	# Fichiers enrichis
 ├── managers/ # Gestionnaires
 │ └── gpx_manager.py # Gestion des GPX
 ├── utils/ # Utilitaires
-│ ├── retry_manager.py # Retry intelligent
+│ ├── retry_manager.py 	# Retry intelligent
 │ ├── validators.py # Validation
 │ └── helpers.py # Fonctions aide
 └── config.py # Configuration

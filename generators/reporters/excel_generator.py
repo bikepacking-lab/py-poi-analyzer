@@ -74,6 +74,7 @@ class ExcelGenerator(BaseGenerator):
             poi_search = summary.get('poi_search', {}) or {}
             poi_results = poi_search.get('results', {}) or {}
             performance = summary.get('performance', {}) or {}
+            time_est = summary.get('time_estimate', {})
             
             summary_data = {
                 'Categorie': [
@@ -93,7 +94,13 @@ class ExcelGenerator(BaseGenerator):
                     'Denivele positif (m)',
                     'Denivele negatif (m)',
                     'Altitude min (m)',
-                    'Altitude max (m)'
+                    'Altitude max (m)',
+                    'Temps estime (sans pauses)',
+                    'Temps estime (avec pauses)',
+                    'Temps estime (humain, sans pauses)',
+                    'Temps estime (humain, avec pauses)',
+                    'Vitesse moyenne',
+                    'Allure'
                 ],
                 'Valeur': [
                     str(data.get('analysis_id', '')),
@@ -112,7 +119,13 @@ class ExcelGenerator(BaseGenerator):
                     float(track_info.get('total_ascent_m', 0)) ,
                     float(track_info.get('total_descent_m', 0)),
                     float(track_info.get('min_elevation_m', 'N/A')),
-                    float(track_info.get('max_elevation_m', 'N/A'))
+                    float(track_info.get('max_elevation_m', 'N/A')),
+                    time_est.get('formatted_moving', 'N/A'),
+                    time_est.get('formatted_total', 'N/A'),
+                    time_est.get('formatted_moving_human', 'N/A'),
+                    time_est.get('formatted_total_human', 'N/A'),
+                    f"{time_est.get('average_speed_kmh', 0)} km/h",
+                    f"{time_est.get('pace_min_per_km', 0)} min/km"
                 ]
             }
         

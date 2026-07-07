@@ -154,7 +154,8 @@ class PDFGenerator(BaseGenerator):
         poi_search = summary.get('poi_search', {})
         poi_results = poi_search.get('results', {})
         performance = summary.get('performance', {})
-
+        time_est = summary.get('time_estimate', {})
+        
         resume_data = [
             ['Metrique', 'Valeur'],
             ['Distance totale', f"{track_info.get('total_distance_km', 0)} km"],
@@ -169,7 +170,13 @@ class PDFGenerator(BaseGenerator):
             ['Denivele positif', f"{track_info.get('total_ascent_m', 0)} m"],
             ['Denivele negatif', f"{track_info.get('total_descent_m', 0)} m"],
             ['Altitude min', f"{track_info.get('min_elevation_m', 'N/A')} m"],
-            ['Altitude max', f"{track_info.get('max_elevation_m', 'N/A')} m"]
+            ['Altitude max', f"{track_info.get('max_elevation_m', 'N/A')} m"],
+            ['Temps estime', f"{time_est.get('formatted_moving', 'N/A')} h"],
+            ['Avec pauses', f"{time_est.get('formatted_total', 'N/A')} h"],
+            ['Temps estime (humain)', f"{time_est.get('formatted_moving_human', 'N/A')} h"],
+            ['Avec pauses (humain)', f"{time_est.get('formatted_total_human', 'N/A')} h"],
+            ['Vitesse moyenne', f"{time_est.get('average_speed_kmh', 'N/A')} km/h"],
+            ['Allure moyenne', f"{time_est.get('pace_min_per_km', 'N/A')} min/km"]
         ]
     
         table = Table(resume_data, colWidths=[6*cm, 8*cm])
