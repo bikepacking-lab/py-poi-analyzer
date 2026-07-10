@@ -173,8 +173,8 @@ class PDFGenerator(BaseGenerator):
             ['Altitude max', f"{track_info.get('max_elevation_m', 'N/A')} m"],
             ['Temps estime', f"{time_est.get('formatted_moving', 'N/A')} h"],
             ['Avec pauses', f"{time_est.get('formatted_total', 'N/A')} h"],
-            ['Temps estime (humain)', f"{time_est.get('formatted_moving_human', 'N/A')} h"],
-            ['Avec pauses (humain)', f"{time_est.get('formatted_total_human', 'N/A')} h"],
+            ['Temps estime (humain)', f"{time_est.get('formatted_moving_dhm', 'N/A')} h"],
+            ['Avec pauses (humain)', f"{time_est.get('formatted_total_dhm', 'N/A')} h"],
             ['Vitesse moyenne', f"{time_est.get('average_speed_kmh', 'N/A')} km/h"],
             ['Allure moyenne', f"{time_est.get('pace_min_per_km', 'N/A')} min/km"]
         ]

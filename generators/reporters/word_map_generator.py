@@ -76,8 +76,8 @@ class WordMapGenerator(BaseGenerator):
             doc.add_heading('Estimation de temps', level=3)
             doc.add_paragraph(f'Temps estimé: {time_est.get("formatted_moving", "N/A")} h')
             doc.add_paragraph(f'Avec pauses: {time_est.get("formatted_total", "N/A")} h')
-            doc.add_paragraph(f'Temps estime (humain): {time_est.get("formatted_moving_human", "N/A")} h')
-            doc.add_paragraph(f'Avec pauses (humain): {time_est.get("formatted_total_human", "N/A")} h')
+            doc.add_paragraph(f'Temps estime (humain): {time_est.get("formatted_moving_dhm", "N/A")} h')
+            doc.add_paragraph(f'Avec pauses (humain): {time_est.get("formatted_total_dhm", "N/A")} h')
             doc.add_paragraph(f'Vitesse moyenne: {time_est.get("average_speed_kmh", "N/A")} km/h')
             
             # === CARTE ===
@@ -295,7 +295,7 @@ class WordMapGenerator(BaseGenerator):
                 x, y = to_pixel(lat, lon)
                 poi_type = self._safe_str(poi, 'type', 'unknown')
                 color = poi_colors.get(poi_type, default_color)
-                name = self._safe_str(poi, 'name', '')
+                # name = self._safe_str(poi, 'name', '')
 
                 # Cercle du POI
                 draw.ellipse([x-7, y-7, x+7, y+7], fill=color, outline='white', width=2)

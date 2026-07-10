@@ -27,7 +27,7 @@ ELEVATION_SUBSAMPLE_STEP = 2
 ELEVATION_SUBSAMPLE_THRESHOLD = 30000
 
 # Configuration de l'analyse
-ANALYSIS_MAX_PARALLEL = 1
+ANALYSIS_MAX_PARALLEL = 2
 ANALYSIS_TIMEOUT_SECONDS = 1200
 
 # Configuration OVERPASS
@@ -40,7 +40,7 @@ OVERPASS_SERVERS = [
 OVERPASS_SERVER_TIMEOUT = 60
 POI_ENABLED = True
 OVERPASS_DEBUG_MODE = True
-MAX_TAGS_PER_TYPE = 20 # nombers filters per tag
+MAX_TAGS_PER_TYPE = 10 # nombers filters per tag
 
 # Configuration du cache
 CACHE_REDIS_URL = 'redis://localhost:6379/0'
@@ -96,9 +96,9 @@ AVAILABLE_REPORT_FORMATS = [
 #   - si vous ajouté un type de POI, vous devez ajouter les rayons 
 # et intervalles correspondants dans ces dictionnaires
 DEFAULT_RADII = {
-    "water": 800.0,
-    "refueling": 800.0,
-    "bivouac": 1000.0,
+    "water": 500.0,
+    "refueling": 500.0,
+    "bivouac": 800.0,
     "accommodation": 1000.0,
     "bike-repair": 5000.0,
     "pharmacy": 800.0
@@ -107,7 +107,7 @@ DEFAULT_RADII = {
 DEFAULT_INTERVALS = {
     "water": 20.0,
     "refueling": 40.0,
-    "bivouac": 80.0,
+    "bivouac": 100.0,
     "accommodation": 80.0,
     "bike-repair": 80.0,
     "pharmacy": 40.0

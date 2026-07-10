@@ -68,6 +68,46 @@ class PDFMapGenerator(BaseGenerator):
             summary = data.get('summary', {})
             track_info = summary.get('track_info', {})
             total_dist = track_info.get('total_distance_km', 0)
+            poi_search = summary.get('poi_search', {})
+            poi_results = poi_search.get('results', {})
+            performance = summary.get('performance', {})
+            time_est = summary.get('time_estimate', {})
+            
+            resume_data = [
+                ['Metrique', 'Valeur'],
+                ['Distance totale', f"{track_info.get('total_distance_km', 0)} km"],
+                ['Nombre de points', str(track_info.get('total_points', 0))],
+                ['Segments', str(data.get('num_segments', 1))],
+                ['Total POI', str(poi_results.get('total_found', 0))],
+                ['POI nommes', str(poi_results.get('named_count', 0))],
+                ['POI non nommes', str(poi_results.get('unnamed_count', 0))],
+                ['Temps total', f"{performance.get('total_duration_seconds', 0):.1f} s"],
+                ['Temps recherche POI', f"{performance.get('search_duration_seconds', 0):.1f} s"],
+                ['Temps calcul distances', f"{performance.get('distance_calculation_seconds', 0):.1f} s"],
+                ['Denivele positif', f"{track_info.get('total_ascent_m', 0)} m"],
+                ['Denivele negatif', f"{track_info.get('total_descent_m', 0)} m"],
+                ['Altitude min', f"{track_info.get('min_elevation_m', 'N/A')} m"],
+                ['Altitude max', f"{track_info.get('max_elevation_m', 'N/A')} m"],
+                ['Temps estime', f"{time_est.get('formatted_moving', 'N/A')} h"],
+                ['Avec pauses', f"{time_est.get('formatted_total', 'N/A')} h"],
+                ['Temps estime (humain)', f"{time_est.get('formatted_moving_dhm', 'N/A')} h"],
+                ['Avec pauses (humain)', f"{time_est.get('formatted_total_dhm', 'N/A')} h"],
+                ['Vitesse moyenne', f"{time_est.get('average_speed_kmh', 'N/A')} km/h"],
+                ['Allure moyenne', f"{time_est.get('pace_min_per_km', 'N/A')} min/km"]
+            ]
+    
+            table = Table(resume_data, colWidths=[6*cm, 8*cm])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B4F72')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            story.append(table)
             
             info_style = ParagraphStyle(
                 'InfoStyle',
@@ -241,7 +281,7 @@ class PDFMapGenerator(BaseGenerator):
         for idx, (poi, lat, lon) in enumerate(valid_pois, 1):
             x, y = to_pixel(lat, lon)
             poi_type = self._safe_str(poi, 'type', 'unknown')
-            poi_name = self._safe_str(poi, 'name', '')
+            # poi_name = self._safe_str(poi, 'name', '')
             
             colors_info = poi_colors.get(poi_type, {'fill': '#95A5A6', 'text': '#5D6D7E'})
             

@@ -15,7 +15,9 @@ class KMLGenerator(BaseGenerator):
         return 'kml-enriched'
     
     def generate(self, data: Dict[str, Any], output_dir: Path, **kwargs) -> Optional[Path]:
-        output_file = output_dir / data.get("analysis_id", "unknown") / f'enriched_track_{data.get("analysis_id", "unknown")}.kml'
+        """Génère un fichier KML enrichi à partir des données fournies"""
+        
+        output_file = output_dir / f'enriched_track_{data.get("analysis_id", "unknown")}.kml'
         
         try:
             kml = ET.Element('kml', xmlns='http://www.opengis.net/kml/2.2')

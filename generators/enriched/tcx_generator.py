@@ -14,7 +14,9 @@ class TCXGenerator(BaseGenerator):
         return 'tcx-enriched'
     
     def generate(self, data: Dict[str, Any], output_dir: Path, **kwargs) -> Optional[Path]:
-        output_file = output_dir / data.get("analysis_id", "unknown") / f'enriched_track_{data.get("analysis_id", "unknown")}.tcx'
+        """Génère un fichier TCX enrichi à partir des données fournies"""
+        
+        output_file = output_dir / f'enriched_track_{data.get("analysis_id", "unknown")}.tcx'
         
         try:
             tcx_lines = []
@@ -23,9 +25,9 @@ class TCXGenerator(BaseGenerator):
             tcx_lines.append('<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"')
             tcx_lines.append('  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
             tcx_lines.append('  xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">')
-            
+            activity_type = data.get('summary', {}).get('time_estimate', {}).get('activity_type', 'gravel')
             tcx_lines.append('  <Activities>')
-            tcx_lines.append('    <Activity Sport="Biking">')
+            tcx_lines.append(f'    <Activity Sport="{activity_type}">')
             tcx_lines.append(f'      <Id>{datetime.now().isoformat()}</Id>')
             tcx_lines.append(f'      <Lap StartTime="{datetime.now().isoformat()}">')
             tcx_lines.append('        <Track>')

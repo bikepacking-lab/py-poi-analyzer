@@ -266,11 +266,11 @@ class GDocsGenerator(BaseGenerator):
             f"Total POI trouves: {poi_results.get('total_found', 0)}\n"
             f"POI nommes: {poi_results.get('named_count', 0)}\n"
             f"POI non nommes: {poi_results.get('unnamed_count', 0)}\n"
-            f"Temps total: {performance.get('total_duration_seconds', 0):.1f} secondes\n\n",
+            f"Temps total: {performance.get('total_duration_seconds', 0):.1f} secondes\n\n"
             f"Temps estime: {time_est.get('formatted_moving', 'N/A')} h\n"
             f"Avec pauses: {time_est.get('formatted_total', 'N/A')} h\n"
-            f"Temps estime (humain): {time_est.get('formatted_moving_human', 'N/A')} h\n"
-            f"Avec pauses (humain): {time_est.get('formatted_total_human', 'N/A')} h\n"
+            f"Temps estime (humain): {time_est.get('formatted_moving_dhm', 'N/A')} h\n"
+            f"Avec pauses (humain): {time_est.get('formatted_total_dhm', 'N/A')} h\n"
             f"Vitesse moyenne: {time_est.get('average_speed_kmh', 'N/A')} km/h\n\n"
         )
 

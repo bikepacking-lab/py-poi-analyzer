@@ -110,7 +110,7 @@ class TrackAnalyzer:
         
         # 5. Split si necessaire (intelligent)
         track_points, segments_count, segment_info = SplitManager.process_split(
-            gpx_processor, total_distance, self.analysis_id
+            gpx_processor, total_distance, str(saved_file).split('/')[-1].split('.')[0], self.analysis_id
         )
         
         # 6. Detection POI

@@ -12,7 +12,7 @@ class SplitManager:
     """Gestionnaire du split intelligent des traces"""
     
     @staticmethod
-    def process_split(gpx_processor, total_distance: float, analysis_id: str) -> Tuple[List[Dict], int, List[Dict]]:
+    def process_split(gpx_processor, total_distance: float, original_file_name: str, analysis_id: str) -> Tuple[List[Dict], int, List[Dict]]:
         """
         Traite le split intelligent de la trace si necessaire
         
@@ -49,7 +49,7 @@ class SplitManager:
         segments_dir.mkdir(parents=True, exist_ok=True)
         
         for i, seg in enumerate(track_segments, 1):
-            seg_path = segments_dir / f'segment_{i:03d}.gpx'
+            seg_path = segments_dir / f'{original_file_name}_segment_{i:03d}.gpx'
             gpx_processor.save_gpx(seg, seg_path)
             
             # Calcul distance reelle du segment
