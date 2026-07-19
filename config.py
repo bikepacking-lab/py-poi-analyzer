@@ -40,7 +40,7 @@ OVERPASS_SERVERS = [
 OVERPASS_SERVER_TIMEOUT = 60
 POI_ENABLED = True
 OVERPASS_DEBUG_MODE = True
-MAX_TAGS_PER_TYPE = 10 # nombers filters per tag
+MAX_TAGS_PER_TYPE = 5 # numbers filters per tag
 
 # Configuration du cache
 CACHE_REDIS_URL = 'redis://localhost:6379/0'
