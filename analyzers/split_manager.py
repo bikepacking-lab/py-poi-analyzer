@@ -51,6 +51,7 @@ class SplitManager:
         for i, seg in enumerate(track_segments, 1):
             seg_path = segments_dir / f'{original_file_name}_segment_{i:03d}.gpx'
             gpx_processor.save_gpx(seg, seg_path)
+            logger.info(f"Segment {i}/{segments_count} sauvegarde: {seg_path} ({len(seg)} points)")
             
             # Calcul distance reelle du segment
             seg_dist = 0.0

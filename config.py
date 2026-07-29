@@ -17,7 +17,7 @@ for d in ALL_DIRS:
 
 # Configuration des limites
 MAX_GPX_SIZE_MB = 5
-MAX_GPX_DISTANCE_KM = 250.0
+MAX_GPX_DISTANCE_KM = 200.0
 GPX_AUTO_SPLIT = True
 
 # Configuration de l'élévation (dénivelé)
@@ -65,11 +65,15 @@ AVAILABLE_TYPE_GPX_SOURCE = [
 # Configuration des formats de rapport
 DEFAULT_REPORT_FORMATS = [
     # report formats
-    "json", "csv", "xlsx", "docx", "pdf", "pdf-map", "docx-map", "gdocs", "gdocs-map",
+    # "json", "csv", "xlsx", 
+    "docx", "pdf", "pdf-map", "docx-map", 
+    # "gdocs", "gdocs-map",
     # enriched formats
-    "fit-enriched","kml-enriched","tcx-enriched", "gpx-enriched", 
+    # "fit-enriched","kml-enriched","tcx-enriched", 
+    "gpx-enriched", 
     # conversion formats
-    "tcx", "kml", "fit"]
+    # "tcx", "kml", "fit"
+]
 AVAILABLE_REPORT_FORMATS = [
     {"type": "json", "label": "Format JSON Summary Data"},
     {"type": "csv", "label": "Report Format CSV"},
@@ -96,18 +100,18 @@ AVAILABLE_REPORT_FORMATS = [
 #   - si vous ajouté un type de POI, vous devez ajouter les rayons 
 # et intervalles correspondants dans ces dictionnaires
 DEFAULT_RADII = {
-    "water": 500.0,
-    "refueling": 500.0,
-    "bivouac": 800.0,
+    "water": 100.0,
+    "refueling": 100.0,
+    "bivouac": 200.0,
     "accommodation": 1000.0,
     "bike-repair": 5000.0,
     "pharmacy": 800.0
 }
 
 DEFAULT_INTERVALS = {
-    "water": 20.0,
-    "refueling": 40.0,
-    "bivouac": 100.0,
+    "water": 5.0,
+    "refueling": 5.0,
+    "bivouac": 5.0,
     "accommodation": 80.0,
     "bike-repair": 80.0,
     "pharmacy": 40.0
@@ -213,7 +217,7 @@ AVAILABLE_POI_TAGS_OSM = {
 DEFAULT_SPEEDS = {
     'cycling': 20.0,
     'mtb': 12.0, 
-    'gravel': 16.0,
+    'gravel': 15.0,
     'hiking': 4.5, 
     'running': 8.0, 
     'walking': 3.5,
@@ -234,4 +238,4 @@ DEFAULT_DAY_DURATION_HOURS = {
 DEFAULT_ACTIVITY_TYPE = 'gravel'
 
 # Inclure les pauses estimées (minutes par heure)
-DEFAULT_BREAKS_PER_HOUR = 15.0
+DEFAULT_BREAKS_PER_HOUR = 5.0

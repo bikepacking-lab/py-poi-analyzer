@@ -89,8 +89,8 @@ class TimeEstimator:
             'break_minutes': round(break_minutes, 1),
             'average_speed_kmh': round(adjusted_speed, 1),
             'pace_min_per_km': round(pace, 1),
-            'formatted_moving': TimeEstimator._format_time(moving_minutes),
-            'formatted_total': TimeEstimator._format_time(total_minutes),
+            'formatted_moving': round(moving_seconds,1),
+            'formatted_total': round(total_seconds,1),
             'activity_type': activity_type or DEFAULT_ACTIVITY_TYPE,
             'formatted_moving_dhm': TimeEstimator._format_time(moving_minutes),
             'formatted_total_dhm': TimeEstimator._format_time(total_minutes)
