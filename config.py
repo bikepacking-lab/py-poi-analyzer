@@ -28,7 +28,7 @@ ELEVATION_SUBSAMPLE_THRESHOLD = 30000
 
 # Configuration de l'analyse
 ANALYSIS_MAX_PARALLEL = 2
-ANALYSIS_TIMEOUT_SECONDS = 1200
+ANALYSIS_TIMEOUT_SECONDS = 600 #1200
 
 # Configuration OVERPASS
 POI_API_URL = 'https://overpass-api.de/api/interpreter' # ! deprecate, use OVERPASS_SERVERS instead
@@ -40,7 +40,7 @@ OVERPASS_SERVERS = [
 OVERPASS_SERVER_TIMEOUT = 60
 POI_ENABLED = True
 OVERPASS_DEBUG_MODE = True
-MAX_TAGS_PER_TYPE = 5 # numbers filters per tag
+MAX_TAGS_PER_TYPE = 20 # numbers filters per tag
 
 # Configuration du cache
 CACHE_REDIS_URL = 'redis://localhost:6379/0'
@@ -70,7 +70,7 @@ DEFAULT_REPORT_FORMATS = [
     # "gdocs", "gdocs-map",
     # enriched formats
     # "fit-enriched","kml-enriched","tcx-enriched", 
-    "gpx-enriched", 
+    # "gpx-enriched", 
     # conversion formats
     # "tcx", "kml", "fit"
 ]
@@ -100,21 +100,21 @@ AVAILABLE_REPORT_FORMATS = [
 #   - si vous ajouté un type de POI, vous devez ajouter les rayons 
 # et intervalles correspondants dans ces dictionnaires
 DEFAULT_RADII = {
-    "water": 100.0,
-    "refueling": 100.0,
-    "bivouac": 200.0,
+    "water": 1000.0,
+    "refueling": 700.0,
+    "bivouac": 800.0,
     "accommodation": 1000.0,
     "bike-repair": 5000.0,
     "pharmacy": 800.0
 }
 
 DEFAULT_INTERVALS = {
-    "water": 5.0,
-    "refueling": 5.0,
-    "bivouac": 5.0,
-    "accommodation": 80.0,
+    "water": 10.0,
+    "refueling": 50.0,
+    "bivouac": 100.0,
+    "accommodation": 100.0,
     "bike-repair": 80.0,
-    "pharmacy": 40.0
+    "pharmacy": 50.0
 }
 
 # Configuration des types de POI par défaut et disponibles
@@ -238,4 +238,4 @@ DEFAULT_DAY_DURATION_HOURS = {
 DEFAULT_ACTIVITY_TYPE = 'gravel'
 
 # Inclure les pauses estimées (minutes par heure)
-DEFAULT_BREAKS_PER_HOUR = 5.0
+DEFAULT_BREAKS_PER_HOUR = 10.0

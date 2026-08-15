@@ -207,7 +207,7 @@ class PDFMapGenerator(BaseGenerator):
         
         def to_pixel(lat, lon):
             x = margin + ((lon - lon_min) / (lon_max - lon_min)) * (map_width - 2*margin)
-            y = margin + ((lat_max - lat) / (lat_max - lat_min)) * (map_height - 2*margin)
+            y = margin + ((lat - lat_min) / (lat_max - lat_min)) * (map_height - 2*margin)
             return x, y
         
         # === 1. GRILLE ===
@@ -418,7 +418,7 @@ class PDFMapGenerator(BaseGenerator):
             poi_name = self._safe_str(poi, 'name', 'Sans nom')
             poi_lat = self._safe_float(poi, 'lat', 0.0)
             poi_lon = self._safe_float(poi, 'lon', 0.0)
-            poi_dist = self._safe_float(poi, 'distance', 0.0)
+            poi_dist = self._safe_float(poi, 'distance_along_track', self._safe_float(poi, 'distance', 0.0))
             
             data.append([
                 str(idx),

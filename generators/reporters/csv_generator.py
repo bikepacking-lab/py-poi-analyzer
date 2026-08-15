@@ -42,7 +42,7 @@ class CSVGenerator(BaseGenerator):
                             'Nom': self._get_value(poi, 'name', 'Sans nom'),
                             'Latitude': self._get_float(poi, 'lat', 0.0),
                             'Longitude': self._get_float(poi, 'lon', 0.0),
-                            'Distance (km)': self._get_float(poi, 'distance', 0.0),
+                            'Distance (km)': self._get_float(poi, 'distance_along_track', self._get_float(poi, 'distance', 0.0)),
                             'Adresse': self._get_value(poi, 'address', ''),
                             'Telephone': self._get_value(poi, 'phone', ''),
                             'Site web': self._get_value(poi, 'website', ''),

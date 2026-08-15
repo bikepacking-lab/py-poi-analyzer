@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import json
 import time
+import math
 from core.time_estimator import TimeEstimator
 
 from config import (
@@ -110,7 +111,7 @@ class TrackAnalyzer:
         
         # 5. Split si necessaire (intelligent)
         track_points, segments_count, segment_info = SplitManager.process_split(
-            gpx_processor, total_distance, str(saved_file).split('/')[-1].split('.')[0], self.analysis_id
+            gpx_processor, total_distance, Path(saved_file).stem, self.analysis_id
         )
         
         # 6. Detection POI
@@ -125,9 +126,32 @@ class TrackAnalyzer:
         for poi_type in poi_types:
             interval = intervals.get(poi_type, 20.0)
             logger.info(f"Bboxes pour '{poi_type}': intervalle {interval} km")
-            bboxes = gpx_processor.get_poi_search_segments(interval)
-            bboxes_by_type[poi_type] = bboxes
-            all_bboxes.extend(bboxes)
+            # Generer des segments/bboxes depuis le GPX
+            raw_bboxes = gpx_processor.get_poi_search_segments(interval)
+            # Adapter chaque bbox en une petite bbox centree sur la segment
+            # dont la taille est basee sur le rayon desire (en metres)
+            radius_m = radii.get(poi_type, DEFAULT_RADII.get(poi_type, 100.0))
+            small_bboxes = []
+            for rb in raw_bboxes:
+                lat_min, lon_min, lat_max, lon_max = rb
+                center_lat = (lat_min + lat_max) / 2.0
+                center_lon = (lon_min + lon_max) / 2.0
+
+                # Convertir le rayon en degres approx: 1 deg lat ~= 111 km
+                delta_lat = (radius_m / 1000.0) / 111.0
+                # Longitude depend de la latitude
+                delta_lon = delta_lat / max(0.000001, math.cos(math.radians(center_lat)))
+
+                small_bbox = (
+                    float(center_lat - delta_lat),
+                    float(center_lon - delta_lon),
+                    float(center_lat + delta_lat),
+                    float(center_lon + delta_lon)
+                )
+                small_bboxes.append(small_bbox)
+
+            bboxes_by_type[poi_type] = small_bboxes
+            all_bboxes.extend(small_bboxes)
         
         unique_bboxes = list(set(all_bboxes))
         logger.info(f"Total: {len(unique_bboxes)} bboxes uniques")

@@ -644,28 +644,64 @@ class POIDetector:
         return all_pois
     
     def calculate_distances_to_track(self, pois: List[POI], track_points: List[Dict]) -> List[POI]:
-        """Calcule les distances des POI par rapport a la trace"""
+        """Calcule la distance d'un POI par rapport a la trace et sa position cumulative sur celle-ci."""
         if not pois or not track_points:
             return pois
-        
+
         logger.info(f"Calcul distances: {len(pois)} POI")
-        
+
         points = track_points[::10] if len(track_points) > 2000 else track_points
-        
+        if len(points) < 2:
+            for poi in pois:
+                poi.distance = None
+                poi.distance_along_track = None
+            return pois
+
+        cumulative_distances = [0.0]
+        for index in range(1, len(points)):
+            prev_point = points[index - 1]
+            current_point = points[index]
+            segment_distance = self._haversine_distance(
+                prev_point['latitude'], prev_point['longitude'],
+                current_point['latitude'], current_point['longitude']
+            )
+            cumulative_distances.append(cumulative_distances[-1] + segment_distance)
+
+        total_track_distance = cumulative_distances[-1] if cumulative_distances else 0.0
+
         for poi in pois:
             min_dist = float('inf')
-            for point in points:
+            closest_index = 0
+            for index, point in enumerate(points):
                 dist = self._haversine_distance(
                     poi.lat, poi.lon,
                     point['latitude'], point['longitude']
                 )
                 if dist < min_dist:
                     min_dist = dist
+                    closest_index = index
                     if min_dist < 0.01:
                         break
+
+            if closest_index == 0:
+                distance_along_track = 0.0
+            elif closest_index >= len(cumulative_distances):
+                distance_along_track = total_track_distance
+            else:
+                distance_along_track = cumulative_distances[closest_index]
+
             poi.distance = min_dist
-        
-        return pois
+            poi.distance_along_track = distance_along_track
+
+        sorted_pois = sorted(
+            pois,
+            key=lambda poi: (
+                poi.distance_along_track is None,
+                poi.distance_along_track if poi.distance_along_track is not None else float('inf')
+            )
+        )
+
+        return sorted_pois
     
     def _haversine_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """Distance en km avec Haversine"""

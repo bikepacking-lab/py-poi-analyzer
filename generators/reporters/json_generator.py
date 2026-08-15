@@ -77,7 +77,7 @@ class JSONGenerator(BaseGenerator):
                     'lon': self._get_float(poi, 'lon', 0.0),
                     'osm_type': self._get_value(poi, 'osm_type', 'node')
                 },
-                'distance_km': self._get_float(poi, 'distance', 0.0),
+                'distance_km': self._get_float(poi, 'distance_along_track', self._get_float(poi, 'distance', 0.0)),
                 'address': self._get_value(poi, 'address', ''),
                 'phone': self._get_value(poi, 'phone', ''),
                 'website': self._get_value(poi, 'website', ''),

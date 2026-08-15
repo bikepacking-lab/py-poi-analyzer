@@ -653,7 +653,7 @@ class GDocsMapGenerator(BaseGenerator):
                 poi_type = self._safe_str(poi, 'type', '')
                 lat = self._safe_float(poi, 'lat', 0.0)
                 lon = self._safe_float(poi, 'lon', 0.0)
-                distance = self._safe_float(poi, 'distance', 0.0)
+                distance = self._safe_float(poi, 'distance_along_track', self._safe_float(poi, 'distance', 0.0))
                 address = self._safe_str(poi, 'address', '')
                 phone = self._safe_str(poi, 'phone', '')
                 hours = self._safe_str(poi, 'opening_hours', '')

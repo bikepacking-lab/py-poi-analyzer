@@ -167,7 +167,7 @@ class ExcelGenerator(BaseGenerator):
                 poi_name = self._get_value(poi, 'name', 'Sans nom')
                 poi_lat = self._get_float(poi, 'lat', 0.0)
                 poi_lon = self._get_float(poi, 'lon', 0.0)
-                poi_dist = self._get_float(poi, 'distance', 0.0)
+                poi_dist = self._get_float(poi, 'distance_along_track', self._get_float(poi, 'distance', 0.0))
                 
                 # Formatage de la distance
                 if poi_dist > 0:

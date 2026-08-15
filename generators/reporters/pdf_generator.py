@@ -240,8 +240,9 @@ class PDFGenerator(BaseGenerator):
             details = []
             if poi.get('type'):
                 details.append(f"Type: {poi.get('type')}")
-            if poi.get('distance'):
-                details.append(f"Distance: {poi.get('distance'):.2f} km")
+            distance_value = poi.get('distance_along_track', poi.get('distance', 0))
+            if distance_value:
+                details.append(f"Distance sur la trace: {float(distance_value):.2f} km")
             if poi.get('address'):
                 details.append(f"Adresse: {poi.get('address')}")
             if poi.get('phone'):

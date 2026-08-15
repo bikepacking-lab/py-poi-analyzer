@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from pathlib import Path
 from typing import List, Dict, Any, Tuple, Optional
 import logging
 import math
@@ -40,6 +41,9 @@ class SplitManager:
         
         logger.info(f"Split intelligent: {total_distance:.1f} km -> {num_segments} segments de ~{segment_distance:.1f} km")
         
+        # Normaliser le nom du fichier source pour eviter des chemins absolus
+        original_file_name = Path(original_file_name).stem
+
         # Decoupage en segments de distance approx. egale
         track_segments = SplitManager._split_intelligent(gpx_processor, num_segments)
         segments_count = len(track_segments)

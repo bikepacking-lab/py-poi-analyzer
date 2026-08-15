@@ -406,7 +406,7 @@ class GDocsGenerator(BaseGenerator):
             for i, poi in enumerate(pois, 1):
                 name = self._safe_str(poi, 'name', 'Sans nom')
                 poi_type = self._safe_str(poi, 'type', '')
-                distance = self._safe_float(poi, 'distance', 0.0)
+                distance = self._safe_float(poi, 'distance_along_track', self._safe_float(poi, 'distance', 0.0))
                 address = self._safe_str(poi, 'address', '')
                 phone = self._safe_str(poi, 'phone', '')
                 

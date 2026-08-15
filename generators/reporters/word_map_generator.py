@@ -146,7 +146,7 @@ class WordMapGenerator(BaseGenerator):
                     row_cells[2].text = self._safe_str(poi, 'name', 'Sans nom')
                     row_cells[3].text = f"{self._safe_float(poi, 'lat', 0.0):.5f}"
                     row_cells[4].text = f"{self._safe_float(poi, 'lon', 0.0):.5f}"
-                    row_cells[5].text = f"{self._safe_float(poi, 'distance', 0.0):.2f}"
+                    row_cells[5].text = f"{self._safe_float(poi, 'distance_along_track', self._safe_float(poi, 'distance', 0.0)):.2f}"
                     row_cells[6].text = self._safe_str(poi, 'address', '')[:40]
                     row_cells[7].text = self._safe_str(poi, 'phone', '')
                     row_cells[8].text = self._safe_str(poi, 'opening_hours', '')[:20]

@@ -85,7 +85,7 @@ class WordGenerator(BaseGenerator):
                     row_cells[2].text = self._get_value(poi, 'name', 'Sans nom')
                     row_cells[3].text = f"{self._get_float(poi, 'lat', 0.0):.5f}"
                     row_cells[4].text = f"{self._get_float(poi, 'lon', 0.0):.5f}"
-                    row_cells[5].text = f"{self._get_float(poi, 'distance', 0.0):.2f}"
+                    row_cells[5].text = f"{self._get_float(poi, 'distance_along_track', self._get_float(poi, 'distance', 0.0)):.2f}"
                     row_cells[6].text = self._get_value(poi, 'address', '')[:30]
                     row_cells[7].text = self._get_value(poi, 'phone', '')
                 

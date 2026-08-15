@@ -70,16 +70,20 @@ class TimeEstimator:
         moving_minutes = moving_hours * 60
         moving_seconds = moving_minutes * 60
         
-        
         # Pauses
         break_minutes = (moving_hours * (breaks_per_hour or DEFAULT_BREAKS_PER_HOUR))
         total_minutes = moving_minutes + break_minutes
         total_hours = total_minutes / 60
         total_seconds = total_minutes * 60
         
-        
         # Allure (min/km)
         pace = moving_minutes / distance_km if distance_km > 0 else 0
+
+        activity_key = activity_type or DEFAULT_ACTIVITY_TYPE
+        day_duration_hours = DEFAULT_DAY_DURATION_HOURS.get(
+            activity_key,
+            DEFAULT_DAY_DURATION_HOURS.get('default', 8.0)
+        )
         
         return {
             'moving_hours': round(moving_hours, 2),
@@ -91,21 +95,34 @@ class TimeEstimator:
             'pace_min_per_km': round(pace, 1),
             'formatted_moving': round(moving_seconds,1),
             'formatted_total': round(total_seconds,1),
-            'activity_type': activity_type or DEFAULT_ACTIVITY_TYPE,
-            'formatted_moving_dhm': TimeEstimator._format_time(moving_minutes),
-            'formatted_total_dhm': TimeEstimator._format_time(total_minutes)
+            'activity_type': activity_key,
+            'formatted_moving_dhm': TimeEstimator._format_time(moving_minutes, day_duration_hours),
+            'formatted_total_dhm': TimeEstimator._format_time(total_minutes, day_duration_hours)
         }
     
     @staticmethod
-    def _format_time(minutes: float) -> str:
-        """Formate un temps en heures et minutes"""
+    def _format_time(minutes: float, day_duration_hours: Optional[float] = None) -> str:
+        """Formate un temps en jours, heures et minutes selon la durée d'une journée."""
         if minutes < 1:
             return '0 min'
-        
-        hours = int(minutes // 60)
-        mins = int(minutes % 60)
-        
-        if hours > 0 and mins > 0:
+
+        day_duration_hours = day_duration_hours or 24.0
+        day_duration_minutes = day_duration_hours * 60
+
+        days = int(minutes // day_duration_minutes)
+        modulo = int(minutes % day_duration_minutes)
+        hours = int(modulo // 60)
+        mins = int(modulo % 60)
+
+        if days > 0 and hours > 0 and mins > 0:
+            return f"{days}d {hours}h {mins}min"
+        elif days > 0 and hours > 0:
+            return f"{days}d {hours}h"
+        elif days > 0 and mins > 0:
+            return f"{days}d {mins}min"
+        elif days > 0:
+            return f"{days}d"
+        elif hours > 0 and mins > 0:
             return f"{hours}h {mins}min"
         elif hours > 0:
             return f"{hours}h"
@@ -127,7 +144,7 @@ class TimeEstimator:
         days = int(hours // h_day)
         modulo = hours % h_day
 
-        h = int(modulo)
-        m = int((modulo - h) * 60)
+        hours = int(modulo)
+        minutes = int((modulo - hours) * 60)
 
-        return days, h, m
+        return days, hours, minutes
