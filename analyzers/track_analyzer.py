@@ -16,10 +16,12 @@ from config import (
     DEFAULT_INTERVALS, DEFAULT_REPORT_FORMATS,
     DEFAULT_POI_TAGS_OSM, MAX_TAGS_PER_TYPE, 
     GPX_DIR,
-    DEFAULT_ACTIVITY_TYPE, DEFAULT_BREAKS_PER_HOUR
+    DEFAULT_ACTIVITY_TYPE, DEFAULT_BREAKS_PER_HOUR,
+    DEFAULT_DAY_DURATION_HOURS
 )
 from core.gpx_processor import GPXProcessor
-from core.poi_detector import POIDetector
+from core.place_resolver import PlaceResolver
+from core.poi_detector import POI, POIDetector
 from core.cache_manager import get_cache_manager
 from core.file_converter import FileConverter
 from generators import GeneratorRegistry
@@ -216,6 +218,9 @@ class TrackAnalyzer:
         
         # 11. Sauvegarde du summary
         self._save_summary(input_file, saved_file, stats, reports, file_type)
+        stages_file = self._save_daily_stages(
+            input_file, track_points, pois, activity
+        )
         
         # 12. Performance
         total_duration = time.time() - self.start_time
@@ -251,6 +256,7 @@ class TrackAnalyzer:
             'pois_by_type': poi_stats.get('by_type', {}),
             'reports': reports,
             'summary': stats,
+            'stages_file': str(stages_file),
             'fit_enriched_error_information': fit_enriched_error,
             'fit_converted_error_information': fit_converted_error
         }
@@ -412,3 +418,159 @@ class TrackAnalyzer:
             }, f, indent=2, ensure_ascii=False, default=str)
         
         logger.info(f"Resume sauvegarde: {summary_file}")
+
+    def _save_daily_stages(
+        self,
+        input_file: Path,
+        track_points: List[Dict[str, Any]],
+        pois: List[POI],
+        activity: str
+    ) -> Path:
+        """Sauvegarde le découpage estimé de la trace en étapes journalières."""
+        stages = self._build_daily_stages(
+            track_points, pois, activity, PlaceResolver()
+        )
+        stages_file = self.analysis_dir / f'analysis_report_{self.analysis_id}_stages.json'
+        with open(stages_file, 'w', encoding='utf-8') as file:
+            json.dump({
+                'analysis_id': self.analysis_id,
+                'generated': datetime.now().isoformat(),
+                'input_file': str(input_file),
+                'activity': activity,
+                'location_source': {
+                    'provider': 'Nominatim',
+                    'attribution': '© OpenStreetMap contributors'
+                },
+                'day_duration_hours': DEFAULT_DAY_DURATION_HOURS.get(
+                    activity, DEFAULT_DAY_DURATION_HOURS.get('default', 8.0)
+                ),
+                'stages': stages
+            }, file, indent=2, ensure_ascii=False, default=str)
+
+        logger.info(f"Étapes journalières sauvegardées: {stages_file}")
+        return stages_file
+
+    @staticmethod
+    def _build_daily_stages(
+        track_points: List[Dict[str, Any]],
+        pois: List[POI],
+        activity: str,
+        place_resolver: Optional[PlaceResolver] = None
+    ) -> List[Dict[str, Any]]:
+        """Découpe une trace en journées selon la durée estimée configurée."""
+        if len(track_points) < 2:
+            return []
+
+        day_duration_hours = DEFAULT_DAY_DURATION_HOURS.get(
+            activity, DEFAULT_DAY_DURATION_HOURS.get('default', 8.0)
+        )
+        stage_ranges = []
+        stage_start_distance = float(track_points[0].get('distance', 0.0))
+        stage_start_point = track_points[0]
+        stage_distance = 0.0
+        stage_ascent = 0.0
+
+        for index in range(1, len(track_points)):
+            previous_point = track_points[index - 1]
+            point = track_points[index]
+            previous_distance = float(previous_point.get('distance', 0.0))
+            current_distance = float(point.get('distance', previous_distance))
+            leg_distance = max(0.0, current_distance - previous_distance)
+
+            previous_elevation = previous_point.get('elevation')
+            current_elevation = point.get('elevation')
+            leg_ascent = 0.0
+            if previous_elevation is not None and current_elevation is not None:
+                leg_ascent = max(
+                    0.0, float(current_elevation) - float(previous_elevation)
+                )
+
+            candidate_distance = stage_distance + leg_distance
+            candidate_ascent = stage_ascent + leg_ascent
+            candidate_duration = TimeEstimator.estimate_time(
+                distance_km=candidate_distance,
+                total_ascent_m=candidate_ascent,
+                activity_type=activity,
+                breaks_per_hour=DEFAULT_BREAKS_PER_HOUR
+            )['total_hours']
+
+            if stage_distance > 0 and candidate_duration > day_duration_hours:
+                stage_ranges.append((
+                    stage_start_distance, previous_distance,
+                    stage_distance, stage_ascent,
+                    stage_start_point, previous_point
+                ))
+                stage_start_distance = previous_distance
+                stage_start_point = previous_point
+                stage_distance = leg_distance
+                stage_ascent = leg_ascent
+            else:
+                stage_distance = candidate_distance
+                stage_ascent = candidate_ascent
+
+        final_distance = float(track_points[-1].get('distance', stage_start_distance))
+        stage_ranges.append((
+            stage_start_distance, final_distance,
+            stage_distance, stage_ascent,
+            stage_start_point, track_points[-1]
+        ))
+
+        poi_data = [poi.to_dict() for poi in pois]
+        stages = []
+        for stage_index, stage_range in enumerate(stage_ranges):
+            (
+                start_distance, end_distance, distance, ascent,
+                start_point, end_point
+            ) = stage_range
+            estimate = TimeEstimator.estimate_time(
+                distance_km=distance,
+                total_ascent_m=ascent,
+                activity_type=activity,
+                breaks_per_hour=DEFAULT_BREAKS_PER_HOUR
+            )
+            is_last_stage = stage_index == len(stage_ranges) - 1
+            stage_pois = [
+                poi for poi in poi_data
+                if poi.get('distance_along_track') is not None
+                and start_distance <= poi['distance_along_track']
+                and (
+                    poi['distance_along_track'] <= end_distance
+                    if is_last_stage else poi['distance_along_track'] < end_distance
+                )
+            ]
+            start_location = None
+            if (
+                place_resolver
+                and start_point.get('latitude') is not None
+                and start_point.get('longitude') is not None
+            ):
+                start_location = place_resolver.resolve(
+                    float(start_point['latitude']), float(start_point['longitude'])
+                )
+            end_location = None
+            if (
+                place_resolver
+                and end_point.get('latitude') is not None
+                and end_point.get('longitude') is not None
+            ):
+                end_location = place_resolver.resolve(
+                    float(end_point['latitude']), float(end_point['longitude'])
+                )
+            stages.append({
+                'day': stage_index + 1,
+                'start_location': start_location,
+                'end_location': end_location,
+                'start_distance_km': round(start_distance, 2),
+                'end_distance_km': round(end_distance, 2),
+                'distance_km': round(distance, 2),
+                'total_ascent_m': round(ascent, 1),
+                'duration': {
+                    'total_hours': estimate['total_hours'],
+                    'moving_hours': estimate['moving_hours'],
+                    'formatted': estimate['formatted_total_dhm']
+                },
+                'average_speed_kmh': estimate['average_speed_kmh'],
+                'pois': stage_pois
+            })
+
+        return stages

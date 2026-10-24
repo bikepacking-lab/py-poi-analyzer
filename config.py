@@ -101,19 +101,19 @@ AVAILABLE_REPORT_FORMATS = [
 # et intervalles correspondants dans ces dictionnaires
 DEFAULT_RADII = {
     "water": 1000.0,
-    "refueling": 700.0,
-    "bivouac": 800.0,
+    "refueling": 1000.0,
+    "bivouac": 1000.0,
     "accommodation": 1000.0,
     "bike-repair": 5000.0,
-    "pharmacy": 800.0
+    "pharmacy": 100.0
 }
 
 DEFAULT_INTERVALS = {
     "water": 10.0,
-    "refueling": 50.0,
-    "bivouac": 100.0,
-    "accommodation": 100.0,
-    "bike-repair": 80.0,
+    "refueling": 20.0,
+    "bivouac": 50.0,
+    "accommodation": 50.0,
+    "bike-repair": 40.0,
     "pharmacy": 50.0
 }
 

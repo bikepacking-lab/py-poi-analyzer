@@ -23,6 +23,7 @@ GPS Trace Analyzer est un outil modulaire d'analyse de traces GPS permettant :
 - L'enrichissement de fichiers GPS
 - La gestion de traces volumineuses avec split automatique
 - Calcule estimation du temps d'activité par jour.
+- La génération automatique d'un JSON récapitulant les étapes journalières et leurs POI.
 
 Les formats acceptés en entrée d'analyse : GPX, TCX, FIT, KML.
 
@@ -104,6 +105,17 @@ python main.py track.gpx \
     --intervals '{"water":30,"refueling":40}' \
     --debug
 ```
+
+Chaque analyse crée automatiquement dans son dossier de rapport un fichier
+`analysis_report_<id>_summary.json` ainsi qu'un fichier
+`analysis_report_<id>_stages.json`. Ce dernier répartit la trace en étapes
+journalières selon la durée de journée configurée pour l'activité et contient,
+pour chacune, les lieux de départ et d'arrivée obtenus par géocodage inverse
+Nominatim/OpenStreetMap, la distance, le dénivelé positif, la durée estimée,
+la vitesse moyenne estimée et les POI situés sur l'étape. Les coordonnées des
+points de départ et d'arrivée sont envoyées à Nominatim; l'attribution
+OpenStreetMap est incluse dans le JSON. Le chemin du fichier est aussi renvoyé
+dans `results['stages_file']` lors d'une utilisation comme module.
 
 **En tant que module**
 
