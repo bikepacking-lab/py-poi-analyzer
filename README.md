@@ -55,12 +55,33 @@ gps_analyzer/
 │ ├── file_converter.py # Conversion formats
 │ └── time_estimator.py # Estimation du temps
 ├── analyzers/ # Analyseurs
+│ ├── file_manager.py
+│ ├── recommendation_manager.py
+│ ├── stats_manager.py
+│ ├── split_manager.py
 │ └── track_analyzer.py # Analyseur principal
 ├── generators/ # Générateurs (Strategy Pattern)
 │ ├── base_generator.py # Classe de base
 │ ├── converters/ 	# Convertisseurs
+│ │ ├── fit_converter.py
+│ │ ├── kml_converter.py
+│ │ ├── gpx_converter.py
+│ │ └── tcx_converter.py
 │ ├── reporters/ 	# Rapports
+│ │ ├── csv_generator.py
+│ │ ├── excel_generator.py
+│ │ ├── json_generator.py
+│ │ ├── pdf_generator.py
+│ │ ├── pdf_map_generator.py
+│ │ ├── word_generator.py
+│ │ ├── word_map_generator.py
+│ │ ├── gdocs_map_generator.py
+│ │ └── gdoc_generator.py
 │ └── enriched/ 	# Fichiers enrichis
+│   ├── fit_generator.py
+│   ├── gpx_generator.py
+│   ├── tcx_generator.py
+│   └── kml_generator.py
 ├── managers/ # Gestionnaires
 │ └── gpx_manager.py # Gestion des GPX
 ├── utils/ # Utilitaires
