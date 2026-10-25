@@ -33,6 +33,8 @@ Conversion vers tous les formats en entrée.
 
 Génération des formats enrichis des POI trouvés par l'analyse.
 
+**NOTE IMPORTANTE : vous pouvez utiliser le code à titre presonnel et non commercial.**
+
 ## Architecture
 
 ### Design Patterns utilisés
