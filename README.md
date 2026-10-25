@@ -47,7 +47,7 @@ Génération des formats enrichis des POI trouvés par l'analyse.
 
 ```text
 
-gps_analyzer/
+py_poi-analyzer/
 ├── core/ # Fonctionnalités cœur
 │ ├── gpx_processor.py 	# Traitement GPX
 │ ├── poi_detector.py 	# Détection POI
