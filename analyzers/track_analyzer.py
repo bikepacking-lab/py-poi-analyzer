@@ -17,7 +17,7 @@ from config import (
     DEFAULT_POI_TAGS_OSM, MAX_TAGS_PER_TYPE, 
     GPX_DIR,
     DEFAULT_ACTIVITY_TYPE, DEFAULT_BREAKS_PER_HOUR,
-    DEFAULT_DAY_DURATION_HOURS
+    DEFAULT_DAY_DURATION_HOURS, DETECT_PEAKS
 )
 from core.gpx_processor import GPXProcessor
 from core.place_resolver import PlaceResolver
@@ -194,6 +194,19 @@ class TrackAnalyzer:
             activity_type=activity,
             breaks_per_hour=DEFAULT_BREAKS_PER_HOUR
         )
+
+        mountain_passes = None
+        if DETECT_PEAKS:
+            mountain_pass_nodes = self.poi_detector.detect_mountain_passes(
+                gpx_processor.get_track_bounds()
+            )
+            mountain_passes = self._build_mountain_passes(
+                mountain_pass_nodes, track_points, self.poi_detector
+            )
+            if mountain_passes is None:
+                logger.warning("La liste des cols est indisponible")
+            else:
+                logger.info("%s col(s) trouvé(s) sur la trace", len(mountain_passes))
         
         # 9. Construction du resume
         stats = self._build_summary(
@@ -202,6 +215,8 @@ class TrackAnalyzer:
             unique_bboxes, bboxes_by_type, poi_stats, search_duration, dist_duration,
             poi_types, radii, intervals, conversion_info
         )
+        if DETECT_PEAKS:
+            stats['mountain_passes'] = mountain_passes
         stats['time_estimate'] = time_estimate
         
         # 10. Generation des rapports
@@ -342,6 +357,135 @@ class TrackAnalyzer:
             'time_estimate': time_estimate,
             'recommendations': recommendations
         }
+
+    @staticmethod
+    def _build_mountain_passes(
+        pass_nodes: Optional[List[Dict[str, Any]]],
+        track_points: List[Dict[str, Any]],
+        poi_detector: POIDetector
+    ) -> Optional[List[Dict[str, Any]]]:
+        """Calcule les métriques des cols OSM proches de la trace."""
+        if pass_nodes is None:
+            return None
+        if not pass_nodes or len(track_points) < 2:
+            return []
+
+        route_distances = [0.0]
+        for previous, point in zip(track_points, track_points[1:]):
+            route_distances.append(
+                route_distances[-1] + poi_detector._haversine_distance(
+                    float(previous['latitude']), float(previous['longitude']),
+                    float(point['latitude']), float(point['longitude'])
+                )
+            )
+
+        results = []
+        seen_ids = set()
+        place_resolver = PlaceResolver()
+        for node in pass_nodes:
+            tags = node.get('tags') or {}
+            try:
+                altitude_text = str(tags.get('ele', '')).strip().lower()
+                if altitude_text.endswith('m'):
+                    altitude_text = altitude_text[:-1].strip()
+                altitude = float(altitude_text.replace(',', '.'))
+                latitude = float(node['lat'])
+                longitude = float(node['lon'])
+            except (TypeError, ValueError, KeyError):
+                logger.warning("Col OSM ignoré: coordonnées ou altitude invalides (%s)", node.get('id'))
+                continue
+
+            node_id = node.get('id')
+            if node_id in seen_ids:
+                continue
+            seen_ids.add(node_id)
+
+            nearest_index = min(
+                range(len(track_points)),
+                key=lambda index: poi_detector._haversine_distance(
+                    latitude, longitude,
+                    float(track_points[index]['latitude']),
+                    float(track_points[index]['longitude'])
+                )
+            )
+            distance_to_track = poi_detector._haversine_distance(
+                latitude, longitude,
+                float(track_points[nearest_index]['latitude']),
+                float(track_points[nearest_index]['longitude'])
+            )
+            if distance_to_track > 0.25:
+                continue
+
+            pass_distance = route_distances[nearest_index]
+            approach_start = max(0.0, pass_distance - 20.0)
+            candidates = [
+                index for index in range(nearest_index)
+                if route_distances[index] >= approach_start
+                and track_points[index].get('elevation') is not None
+            ]
+            start_index = min(
+                candidates,
+                key=lambda index: float(track_points[index]['elevation'])
+            ) if candidates else None
+
+            climb_distance = None
+            ascent = None
+            average_grade = None
+            max_grade = None
+            start_commune = None
+            if start_index is not None:
+                climb_distance = pass_distance - route_distances[start_index]
+                start_elevation = float(track_points[start_index]['elevation'])
+                ascent = max(0.0, altitude - start_elevation)
+                if climb_distance > 0:
+                    average_grade = ascent / (climb_distance * 1000.0) * 100.0
+                    segment_grades = []
+                    for index in range(start_index + 1, nearest_index + 1):
+                        previous_elevation = track_points[index - 1].get('elevation')
+                        current_elevation = track_points[index].get('elevation')
+                        segment_distance = (
+                            route_distances[index] - route_distances[index - 1]
+                        )
+                        if (
+                            previous_elevation is not None
+                            and current_elevation is not None
+                            and segment_distance >= 0.01
+                        ):
+                            grade = (
+                                (float(current_elevation) - float(previous_elevation))
+                                / (segment_distance * 1000.0) * 100.0
+                            )
+                            segment_grades.append(max(0.0, grade))
+                    max_grade = max(segment_grades, default=0.0)
+
+                start_location = place_resolver.resolve(
+                    float(track_points[start_index]['latitude']),
+                    float(track_points[start_index]['longitude'])
+                )
+                if start_location:
+                    address = start_location.get('address', {})
+                    start_commune = next(
+                        (
+                            address[key] for key in
+                            ('municipality', 'city', 'town', 'village', 'hamlet')
+                            if address.get(key)
+                        ),
+                        start_location.get('name')
+                    )
+
+            results.append({
+                'name': tags.get('name') or tags.get('ref') or 'Col sans nom',
+                'kilometer_on_track': round(pass_distance, 2),
+                'distance_to_track_km': round(distance_to_track, 3),
+                'distance_km': round(climb_distance, 2) if climb_distance is not None else None,
+                'altitude_m': round(altitude, 1),
+                'ascent_m': round(ascent, 1) if ascent is not None else None,
+                'average_grade_percent': round(average_grade, 1) if average_grade is not None else None,
+                'max_grade_percent': round(max_grade, 1) if max_grade is not None else None,
+                'start_commune': start_commune
+            })
+
+        return sorted(results, key=lambda mountain_pass: mountain_pass['kilometer_on_track'])
     
     def _generate_reports(self, input_file, saved_file, track_points, pois,
                          total_distance, segments_count, poi_types,

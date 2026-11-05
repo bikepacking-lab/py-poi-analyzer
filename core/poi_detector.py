@@ -554,6 +554,31 @@ class POIDetector:
                 pass
         
         return all_pois
+
+    def detect_mountain_passes(
+        self,
+        bbox: Tuple[float, float, float, float]
+    ) -> Optional[List[Dict[str, Any]]]:
+        """Recherche les cols OSM avec une altitude dans la bbox."""
+        lat_min, lon_min, lat_max, lon_max = bbox
+        bbox_str = f"{lat_min:.6f},{lon_min:.6f},{lat_max:.6f},{lon_max:.6f}"
+        query = (
+            "[out:json][timeout:25];\n"
+            f'node["mountain_pass"="yes"]["ele"]({bbox_str});\n'
+            "out body;"
+        )
+        elements = self._query_overpass(query)
+        if elements is None:
+            logger.error("Impossible de récupérer les cols OSM dans la bbox %s", bbox_str)
+            return None
+
+        passes_by_id = {
+            f"{element.get('type', 'node')}/{element.get('id')}": element
+            for element in elements
+            if (element.get('tags') or {}).get('mountain_pass') == 'yes'
+            and (element.get('tags') or {}).get('ele')
+        }
+        return list(passes_by_id.values())
     
     def detect_pois(self, 
                    bboxes: List[Tuple[float, float, float, float]], 

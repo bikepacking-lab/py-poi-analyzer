@@ -33,6 +33,8 @@ Conversion vers tous les formats en entrée.
 
 Génération des formats enrichis des POI trouvés par l'analyse.
 
+Liste les cols sur la trace analysée si l'option DETECT_PEAKS est activée.
+
 **NOTE IMPORTANTE : vous pouvez utiliser le code à titre presonnel et non commercial.**
 
 ## Architecture

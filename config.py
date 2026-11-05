@@ -239,3 +239,6 @@ DEFAULT_ACTIVITY_TYPE = 'gravel'
 
 # Inclure les pauses estimées (minutes par heure)
 DEFAULT_BREAKS_PER_HOUR = 10.0
+
+# Active la détection des cols 
+DETECT_PEAKS = True
